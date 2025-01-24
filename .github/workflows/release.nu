@@ -92,7 +92,8 @@ mut archive = $'($dist)/($dest).tar.gz'
 match [$os.name, $format] {
     ["windows", "msi"] => {
         $archive = $'($dist)/($dest).msi'
-        cargo wix --no-build --nocapture --target $target --package $bin --output $archive
+        let main_version = if ("+" in $version) {$version | split row "+" | get 0} else {$version}
+        cargo wix --no-build --nocapture --target $target --package $bin --output $archive --install-version $main_version
     }
     ["windows", "bin"] => {
         $archive = $'($dist)/($dest).zip'
