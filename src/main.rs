@@ -32,7 +32,11 @@ fn main() -> Result<ExitCode, miette::ErrReport> {
 
     // Setup nur engine from engine state
     let mut nur_engine = NurEngine::new(engine_state, nur_state)?;
-    let use_color = nur_engine.engine_state.get_config().use_ansi_coloring;
+    let use_color = nur_engine
+        .engine_state
+        .get_config()
+        .use_ansi_coloring
+        .get(&nur_engine.engine_state);
 
     // Parse args
     let parsed_nur_args = nur_engine.parse_args();
