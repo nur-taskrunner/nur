@@ -2,7 +2,7 @@
 name = "nur"
 description = "nur - a taskrunner based on nu shell"
 version = "0.13.2+0.101.0"
-rust-version = "1.81.0"
+rust-version = "1.82.0"
 edition = "2021"
 license = "MIT"
 homepage = "https://nur-taskrunner.github.io/docs/"
@@ -13,20 +13,20 @@ keywords = ["nu", "taskrunner", "development", "command-line", "utility"]
 categories = ["command-line-utilities", "development-tools"]
 
 [dependencies]
-nu-cli = "0.101.0"
-nu-cmd-extra = "0.101.0"
-nu-cmd-lang = "0.101.0"
-nu-command = "0.101.0"
-nu-engine = "0.101.0"
-nu-explore = "0.101.0"
-nu-parser = "0.101.0"
-nu-protocol = "0.101.0"
-nu-std = "0.101.0"
-nu-utils = "0.101.0"
+nu-cli = "0.102.0"
+nu-cmd-extra = "0.102.0"
+nu-cmd-lang = "0.102.0"
+nu-command = "0.102.0"
+nu-engine = "0.102.0"
+nu-explore = "0.102.0"
+nu-parser = "0.102.0"
+nu-protocol = "0.102.0"
+nu-std = "0.102.0"
+nu-utils = "0.102.0"
 thiserror = "2.0.9"
 miette = { version = "7.3", features = ["fancy-no-backtrace", "fancy"] }
 nu-ansi-term = "0.50.1"
-nu-path = "0.101.0"
+nu-path = "0.102.0"
 
 [target.'cfg(not(target_os = "windows"))'.dependencies]
 openssl = { version = "0.10", features = ["vendored"], optional = true }
