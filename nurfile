@@ -107,14 +107,16 @@ def "nur publish" [] {
 def "nur release" [
     version: string
 ] {
+    let main_version = if ("+" in $version) {$version | split row "+" | get 0} else {$version}
+
     print $"Updating to version (ansi purple)($version)(ansi reset)"
     nur version $version
 
     print ""
-    print $"Creating release commit and tag '(ansi purple)v($version)(ansi reset)'"
+    print $"Creating release commit and tag '(ansi purple)v($main_version)(ansi reset)'"
     git add Cargo.toml Cargo.lock
-    git commit -m $"release: 🔖 v($version)"
-    git tag $"v($version)"
+    git commit -m $"release: 🔖 v($main_version)"
+    git tag $"v($main_version)"
 
     print ""
     print "Publishing to crates.io"
