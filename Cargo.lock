@@ -2404,7 +2404,7 @@ dependencies = [
 
 [[package]]
 name = "nur"
-version = "0.13.2+0.101.0"
+version = "0.14.0+0.102.0"
 dependencies = [
  "miette",
  "nu-ansi-term",
