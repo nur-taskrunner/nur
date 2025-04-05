@@ -149,16 +149,13 @@ def "nur run-all" [] {
         $tests | each {
             |it|
             $it | str join " " | print -n
-            let was_ok: bool = try {
-                run-nur $it.1
-                true  # mark as ok
-            } catch {
-                false  # mark as failed
-            }
+            let nur_call = (run-nur $it.1 | complete)
+            let was_ok: bool = ($nur_call.exit_code == 0)
             if $was_ok {
                 print $'...(ansi green)ok(ansi reset)'
             } else {
                 print $'...(ansi red)failed(ansi reset)'
+                print $nur_call
             }
 
             if $was_ok { null } else { $it.1 }
