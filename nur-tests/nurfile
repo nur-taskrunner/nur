@@ -64,7 +64,7 @@ def "nur do-invalid-executable" [] {
 }
 def "nur test-invalid-executable" [] {
     try {
-        run-nur do-invalid-executable o+e>| ignore
+        run-nur do-invalid-executable
     } catch {
         return  # all ok
     }
@@ -96,15 +96,20 @@ def "nur test-running-commands" [] {
 }
 
 def "nur test-invalid-calls" [] {
-    assert exit-code { run-nur non-existing-task o+e>| ignore } 1
-    assert exit-code { run-nur --commands some-command some-task-name o+e>| ignore } 1
-    assert exit-code { run-nur --enter-shell some-task-name o+e>| ignore } 1
-    assert exit-code { run-nur --commands some-command --enter-shell o+e>| ignore } 1
+    assert exit-code { run-nur non-existing-task } 1
+    assert exit-code { run-nur --commands some-command some-task-name } 1
+    assert exit-code { run-nur --enter-shell some-task-nam } 1
+    assert exit-code { run-nur --commands some-command --enter-shell } 1
 }
 
 def "nur do-test-preserve-exit-code" [] { exit 123 }
 def "nur test-preserve-exit-code" [] {
-    assert exit-code { run-nur do-test-preserve-exit-code o+e>| ignore } 123
+    assert exit-code { run-nur do-test-preserve-exit-code } 123
+}
+
+def "nur test-nur-list" [] {
+    let nur_list = (run-nur --list | lines)
+    std assert ($nur_list | is-not-empty)
 }
 
 # Utils and other commands
@@ -118,7 +123,7 @@ def "assert exit-code" [
     exit_code: int,
 ] {
     try { do $code } catch { null }
-    std assert ($env.LAST_EXIT_CODE == $exit_code) $"Expected exit code ($exit_code), but got ($env.LAST_EXIT_CODE)" --error-label {
+    std assert (($env.LAST_EXIT_CODE | into int) == $exit_code) $"Expected exit code ($exit_code), but got ($env.LAST_EXIT_CODE)" --error-label {
         span: {
             start: (metadata $code).span.start
             end: (metadata $code).span.end
@@ -145,12 +150,15 @@ def "nur run-all" [] {
             |it|
             $it | str join " " | print -n
             let was_ok: bool = try {
-                run-nur $it.1 o+e>| ignore
-                print $'...(ansi green)ok(ansi reset)'
+                run-nur $it.1
                 true  # mark as ok
             } catch {
-                print $'...(ansi red)failed(ansi reset)'
                 false  # mark as failed
+            }
+            if $was_ok {
+                print $'...(ansi green)ok(ansi reset)'
+            } else {
+                print $'...(ansi red)failed(ansi reset)'
             }
 
             if $was_ok { null } else { $it.1 }

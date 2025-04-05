@@ -94,11 +94,11 @@ fn main() -> Result<ExitCode, miette::ErrReport> {
     if parsed_nur_args.list_tasks {
         // TODO: Parse and handle commands without eval
         nur_engine.eval_and_print(
-            r#"scope commands 
-            | where name starts-with "nur " and category == "default" 
-            | get name 
-            | each { |it| $it | str substring 4.. } 
-            | sort 
+            r#"scope commands
+            | where name starts-with "nur " and type == "custom"
+            | get name
+            | each { |it| $it | str substring 4.. }
+            | sort
             | each { |it| print $it };
             null"#,
             PipelineData::empty(),
