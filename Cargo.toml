@@ -13,20 +13,20 @@ keywords = ["nu", "taskrunner", "development", "command-line", "utility"]
 categories = ["command-line-utilities", "development-tools"]
 
 [dependencies]
-nu-cli = "0.104.0"
-nu-cmd-extra = "0.104.0"
-nu-cmd-lang = "0.104.0"
-nu-command = "0.104.0"
-nu-engine = "0.104.0"
-nu-explore = "0.104.0"
-nu-parser = "0.104.0"
-nu-protocol = "0.104.0"
-nu-std = "0.104.0"
-nu-utils = "0.104.0"
-thiserror = "2.0.9"
+nu-cli = "0.104.1"
+nu-cmd-extra = "0.104.1"
+nu-cmd-lang = "0.104.1"
+nu-command = "0.104.1"
+nu-engine = "0.104.1"
+nu-explore = "0.104.1"
+nu-parser = "0.104.1"
+nu-protocol = "0.104.1"
+nu-std = "0.104.1"
+nu-utils = "0.104.1"
+thiserror = "2.0.12"
 miette = { version = "7.5", features = ["fancy-no-backtrace", "fancy"] }
 nu-ansi-term = "0.50.1"
-nu-path = "0.104.0"
+nu-path = "0.104.1"
 
 [target.'cfg(not(target_os = "windows"))'.dependencies]
 openssl = { version = "0.10", features = ["vendored"], optional = true }
