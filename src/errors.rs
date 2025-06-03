@@ -41,6 +41,14 @@ pub enum NurError {
     #[error("You cannot use {0} and {1} together")]
     #[diagnostic()]
     InvalidNurCall(String, String),
+
+    #[error("Could not load dotenv file at {0}")]
+    #[diagnostic()]
+    DotenvFileError(String),
+
+    #[error("Could not parse dotenv file: {0}")]
+    #[diagnostic()]
+    DotenvParseError(String),
 }
 
 impl From<std::io::Error> for NurError {

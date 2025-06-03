@@ -18,7 +18,7 @@ use crate::path::current_dir_from_environment;
 use crate::state::NurState;
 use miette::Result;
 use nu_ansi_term::Color;
-use nu_protocol::{ByteStream, PipelineData, Span};
+use nu_protocol::{ByteStream, PipelineData, Span, Value};
 use std::env;
 use std::process::ExitCode;
 
@@ -169,6 +169,37 @@ fn main() -> Result<ExitCode, miette::ErrReport> {
     } else {
         PipelineData::empty()
     };
+
+    // Load .env file from project directory - if requested
+    let env_iter = match parsed_nur_args.dotenv_path {
+        Some(ref path) => {
+            let path_str = path.to_string_lossy().into_owned();
+            Some(
+                dotenvy::from_filename_iter(path)
+                    .map_err(|_| miette::ErrReport::from(NurError::DotenvFileError(path_str)))?,
+            )
+        }
+        None if parsed_nur_args.load_dotenv => {
+            let default_path = format!("{}/.env", nur_engine.state.project_path.to_string_lossy());
+            Some(
+                dotenvy::dotenv_iter().map_err(|_| {
+                    miette::ErrReport::from(NurError::DotenvFileError(default_path))
+                })?,
+            )
+        }
+        _ => None,
+    };
+
+    // Load variables into the engine environment
+    if let Some(items) = env_iter {
+        for item in items {
+            let (key, val) = item.map_err(|err| NurError::DotenvParseError(format!("{err:?}")))?;
+
+            nur_engine
+                .engine_state
+                .add_env_var(key.into(), Value::string(val, Span::unknown()));
+        }
+    }
 
     // Execute the task
     let exit_code: i32;

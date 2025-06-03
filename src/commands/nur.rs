@@ -32,6 +32,17 @@ impl Command for Nur {
                 Some('c'),
             )
             .switch(
+                "dotenv",
+                "Load the `.env` file from the current project directory (ignored if --dotenv-path is provided)",
+                Some('e'),
+            )
+            .named(
+                "dotenv-path",
+                SyntaxShape::Filepath,
+                "Load the dotenv file at the specified file path",
+                Some('d'),
+            )
+            .switch(
                 "enter-shell",
                 "Enter a nu REPL shell after the nurfiles have been loaded (use only for debugging)",
                 None,

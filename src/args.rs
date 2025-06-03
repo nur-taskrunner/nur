@@ -13,6 +13,7 @@ use nu_protocol::{
 use nu_protocol::{report_parse_error, Spanned};
 use nu_utils::escape_quote_string;
 use nu_utils::stdout_write_all_and_flush;
+use std::path::PathBuf;
 
 pub(crate) fn is_safe_taskname(name: &str) -> bool {
     // This is basically similar to string_should_be_quoted
@@ -115,6 +116,11 @@ pub(crate) fn parse_commandline_args(
             let show_help = call.has_flag(engine_state, &mut stack, "help")?;
             let run_commands = call.get_flag_expr("commands");
             let enter_shell = call.has_flag(engine_state, &mut stack, "enter-shell")?;
+            let load_dotenv = call.has_flag(engine_state, &mut stack, "dotenv")?;
+            let dotenv_path = call
+                .get_flag::<String>(engine_state, &mut stack, "dotenv-path")?
+                .map(|val| PathBuf::from(val));
+
             #[cfg(feature = "debug")]
             let debug_output = call.has_flag(engine_state, &mut stack, "debug")?;
 
@@ -157,6 +163,8 @@ pub(crate) fn parse_commandline_args(
                 show_help,
                 run_commands,
                 enter_shell,
+                load_dotenv,
+                dotenv_path,
                 #[cfg(feature = "debug")]
                 debug_output,
             });
@@ -177,6 +185,8 @@ pub(crate) struct NurArgs {
     pub(crate) show_help: bool,
     pub(crate) run_commands: Option<Spanned<String>>,
     pub(crate) enter_shell: bool,
+    pub(crate) load_dotenv: bool,
+    pub(crate) dotenv_path: Option<PathBuf>,
     #[cfg(feature = "debug")]
     pub(crate) debug_output: bool,
 }
@@ -335,5 +345,29 @@ mod tests {
 
         let nur_args = parse_commandline_args("nur --enter-shell", &mut engine_state).unwrap();
         assert_eq!(nur_args.enter_shell, true);
+    }
+
+    #[test]
+    fn test_parse_commandline_args_dotfile_switch() {
+        let mut engine_state = _create_minimal_engine_for_erg_parsing();
+
+        let nur_args = parse_commandline_args("nur --dotenv", &mut engine_state).unwrap();
+        assert_eq!(nur_args.load_dotenv, true);
+    }
+
+    #[test]
+    fn test_parse_commandline_args_dotfile_path() {
+        let mut engine_state = init_engine_state(&std::env::temp_dir()).unwrap();
+        let dotenv_path = std::env::temp_dir().join(std::path::Path::new(".env"));
+
+        let nur_args = parse_commandline_args(
+            &format!(
+                "nur --dotenv-path={}",
+                dotenv_path.to_string_lossy().into_owned()
+            ),
+            &mut engine_state,
+        )
+        .unwrap();
+        assert_eq!(nur_args.dotenv_path, Some(dotenv_path));
     }
 }
