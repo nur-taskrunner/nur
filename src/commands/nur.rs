@@ -31,15 +31,10 @@ impl Command for Nur {
                 "Run the given commands after nurfiles have been loaded",
                 Some('c'),
             )
-            .switch(
-                "dotenv",
-                "Load the `.env` file from the current project directory (ignored if --dotenv-path is provided)",
-                Some('e'),
-            )
             .named(
-                "dotenv-path",
-                SyntaxShape::Filepath,
-                "Load the dotenv file at the specified file path",
+                "dotenv",
+                SyntaxShape::OneOf(vec![SyntaxShape::Nothing, SyntaxShape::Filepath]),
+                "Load the dotenv file at the specified file path (default is to load .env in the project directory). Set to null if no dotenv file should be loaded",
                 Some('d'),
             )
             .switch(

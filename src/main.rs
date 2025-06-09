@@ -18,8 +18,9 @@ use crate::path::current_dir_from_environment;
 use crate::state::NurState;
 use miette::Result;
 use nu_ansi_term::Color;
-use nu_protocol::{ByteStream, PipelineData, Span, Value};
+use nu_protocol::{ByteStream, PipelineData, ShellError, Span, Value};
 use std::env;
+use std::path::PathBuf;
 use std::process::ExitCode;
 
 fn main() -> Result<ExitCode, miette::ErrReport> {
@@ -171,15 +172,9 @@ fn main() -> Result<ExitCode, miette::ErrReport> {
     };
 
     // Load .env file from project directory - if requested
-    let env_iter = match parsed_nur_args.dotenv_path {
-        Some(ref path) => {
-            let path_str = path.to_string_lossy().into_owned();
-            Some(
-                dotenvy::from_filename_iter(path)
-                    .map_err(|_| miette::ErrReport::from(NurError::DotenvFileError(path_str)))?,
-            )
-        }
-        None if parsed_nur_args.load_dotenv => {
+    let env_iter = match parsed_nur_args.dotenv {
+        // default load .env from project directory
+        None => {
             let default_path = format!("{}/.env", nur_engine.state.project_path.to_string_lossy());
             Some(
                 dotenvy::dotenv_iter().map_err(|_| {
@@ -187,7 +182,25 @@ fn main() -> Result<ExitCode, miette::ErrReport> {
                 })?,
             )
         }
-        _ => None,
+        Some(Value::String { val, .. }) => {
+            let path = PathBuf::from(val);
+            let path_str = path.to_string_lossy().into_owned();
+            Some(
+                dotenvy::from_filename_iter(path)
+                    .map_err(|_| miette::ErrReport::from(NurError::DotenvFileError(path_str)))?,
+            )
+        }
+        // if input set to null, do not load any .env files
+        Some(Value::Nothing { .. }) => None,
+        Some(other) => {
+            return Err(miette::ErrReport::from(ShellError::GenericError {
+                error: "--dotenv must either be null (do not load .env) or a filepath".into(),
+                msg: "".into(),
+                span: Some(other.span()),
+                help: None,
+                inner: vec![],
+            }))
+        }
     };
 
     // Load variables into the engine environment

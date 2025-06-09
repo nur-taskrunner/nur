@@ -8,12 +8,11 @@ use nu_protocol::ast::Expression;
 use nu_protocol::{
     ast::Expr,
     engine::{EngineState, Stack, StateWorkingSet},
-    ShellError,
+    ShellError, Value,
 };
 use nu_protocol::{report_parse_error, Spanned};
 use nu_utils::escape_quote_string;
 use nu_utils::stdout_write_all_and_flush;
-use std::path::PathBuf;
 
 pub(crate) fn is_safe_taskname(name: &str) -> bool {
     // This is basically similar to string_should_be_quoted
@@ -116,10 +115,7 @@ pub(crate) fn parse_commandline_args(
             let show_help = call.has_flag(engine_state, &mut stack, "help")?;
             let run_commands = call.get_flag_expr("commands");
             let enter_shell = call.has_flag(engine_state, &mut stack, "enter-shell")?;
-            let load_dotenv = call.has_flag(engine_state, &mut stack, "dotenv")?;
-            let dotenv_path = call
-                .get_flag::<String>(engine_state, &mut stack, "dotenv-path")?
-                .map(|val| PathBuf::from(val));
+            let dotenv = call.get_flag::<Value>(engine_state, &mut stack, "dotenv")?;
 
             #[cfg(feature = "debug")]
             let debug_output = call.has_flag(engine_state, &mut stack, "debug")?;
@@ -163,8 +159,7 @@ pub(crate) fn parse_commandline_args(
                 show_help,
                 run_commands,
                 enter_shell,
-                load_dotenv,
-                dotenv_path,
+                dotenv,
                 #[cfg(feature = "debug")]
                 debug_output,
             });
@@ -185,8 +180,7 @@ pub(crate) struct NurArgs {
     pub(crate) show_help: bool,
     pub(crate) run_commands: Option<Spanned<String>>,
     pub(crate) enter_shell: bool,
-    pub(crate) load_dotenv: bool,
-    pub(crate) dotenv_path: Option<PathBuf>,
+    pub(crate) dotenv: Option<Value>,
     #[cfg(feature = "debug")]
     pub(crate) debug_output: bool,
 }
@@ -195,6 +189,7 @@ pub(crate) struct NurArgs {
 mod tests {
     use super::*;
     use crate::engine::init_engine_state;
+    use nu_protocol::Span;
     use tempfile::tempdir;
 
     #[test]
@@ -348,26 +343,27 @@ mod tests {
     }
 
     #[test]
-    fn test_parse_commandline_args_dotfile_switch() {
-        let mut engine_state = _create_minimal_engine_for_erg_parsing();
+    fn test_parse_commandline_args_dotfile_path() {
+        let mut engine_state = init_engine_state(&std::env::temp_dir()).unwrap();
+        let dotenv_path = std::env::temp_dir()
+            .join(std::path::Path::new(".env"))
+            .to_string_lossy()
+            .into_owned();
 
-        let nur_args = parse_commandline_args("nur --dotenv", &mut engine_state).unwrap();
-        assert_eq!(nur_args.load_dotenv, true);
+        let nur_args =
+            parse_commandline_args(&format!("nur --dotenv={}", dotenv_path), &mut engine_state)
+                .unwrap();
+        assert_eq!(
+            nur_args.dotenv,
+            Some(Value::string(dotenv_path, Span::test_data()))
+        );
     }
 
     #[test]
-    fn test_parse_commandline_args_dotfile_path() {
+    fn test_parse_commandline_args_dotfile_null() {
         let mut engine_state = init_engine_state(&std::env::temp_dir()).unwrap();
-        let dotenv_path = std::env::temp_dir().join(std::path::Path::new(".env"));
 
-        let nur_args = parse_commandline_args(
-            &format!(
-                "nur --dotenv-path={}",
-                dotenv_path.to_string_lossy().into_owned()
-            ),
-            &mut engine_state,
-        )
-        .unwrap();
-        assert_eq!(nur_args.dotenv_path, Some(dotenv_path));
+        let nur_args = parse_commandline_args("nur --dotenv=null", &mut engine_state).unwrap();
+        assert_eq!(nur_args.dotenv, Some(Value::test_nothing()));
     }
 }
