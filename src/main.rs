@@ -200,7 +200,7 @@ fn main() -> Result<ExitCode, miette::ErrReport> {
             nur_engine.state.project_path.to_str().unwrap()
         );
         if parsed_nur_args.run_commands.is_some() {
-            println!("Running command: {}", run_command);
+            println!("Running command: {run_command}");
         } else {
             println!("Executing task: {}", nur_engine.get_short_task_name());
         }

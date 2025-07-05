@@ -47,8 +47,8 @@ pub(crate) fn gather_commandline_args(
         if !arg.starts_with('-') {
             // At least first non nur argument must be safe
             if !is_safe_taskname(arg) {
-                eprintln!("{}", arg);
-                return Err(NurError::InvalidTaskName(arg.clone()));
+                eprintln!("{arg}");
+                return Err(Box::new(NurError::InvalidTaskName(arg.clone())));
             }
 
             // Register task name and switch to task call parsing
@@ -87,7 +87,7 @@ pub(crate) fn gather_commandline_args(
 pub(crate) fn parse_commandline_args(
     commandline_args: &str,
     engine_state: &mut EngineState,
-) -> Result<NurArgs, ShellError> {
+) -> Result<NurArgs, Box<ShellError>> {
     let (block, delta) = {
         let mut working_set = StateWorkingSet::new(engine_state);
 
@@ -129,7 +129,7 @@ pub(crate) fn parse_commandline_args(
 
             fn extract_contents(
                 expression: Option<&Expression>,
-            ) -> Result<Option<Spanned<String>>, ShellError> {
+            ) -> Result<Option<Spanned<String>>, Box<ShellError>> {
                 if let Some(expr) = expression {
                     let str = expr.as_string();
                     if let Some(str) = str {
@@ -138,10 +138,10 @@ pub(crate) fn parse_commandline_args(
                             span: expr.span,
                         }))
                     } else {
-                        Err(ShellError::TypeMismatch {
+                        Err(Box::new(ShellError::TypeMismatch {
                             err_message: "string".into(),
                             span: expr.span,
-                        })
+                        }))
                     }
                 } else {
                     Ok(None)
