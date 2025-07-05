@@ -271,7 +271,7 @@ mod tests {
         assert_eq!(task_call, vec![] as Vec<String>);
     }
 
-    fn _create_minimal_engine_for_erg_parsing() -> EngineState {
+    fn _create_minimal_engine_for_arg_parsing() -> EngineState {
         let temp_dir = tempdir().unwrap();
         let temp_dir_path = temp_dir.path().to_path_buf();
         let engine_state = init_engine_state(&temp_dir_path).unwrap();
@@ -281,7 +281,7 @@ mod tests {
 
     #[test]
     fn test_parse_commandline_args_without_args() {
-        let mut engine_state = _create_minimal_engine_for_erg_parsing();
+        let mut engine_state = _create_minimal_engine_for_arg_parsing();
 
         let nur_args = parse_commandline_args("nur", &mut engine_state).unwrap();
         assert_eq!(nur_args.list_tasks, false);
@@ -294,7 +294,7 @@ mod tests {
 
     #[test]
     fn test_parse_commandline_args_list() {
-        let mut engine_state = _create_minimal_engine_for_erg_parsing();
+        let mut engine_state = _create_minimal_engine_for_arg_parsing();
 
         let nur_args = parse_commandline_args("nur --list", &mut engine_state).unwrap();
         assert_eq!(nur_args.list_tasks, true);
@@ -302,7 +302,7 @@ mod tests {
 
     #[test]
     fn test_parse_commandline_args_quiet() {
-        let mut engine_state = _create_minimal_engine_for_erg_parsing();
+        let mut engine_state = _create_minimal_engine_for_arg_parsing();
 
         let nur_args = parse_commandline_args("nur --quiet", &mut engine_state).unwrap();
         assert_eq!(nur_args.quiet_execution, true);
@@ -310,7 +310,7 @@ mod tests {
 
     #[test]
     fn test_parse_commandline_args_stdin() {
-        let mut engine_state = _create_minimal_engine_for_erg_parsing();
+        let mut engine_state = _create_minimal_engine_for_arg_parsing();
 
         let nur_args = parse_commandline_args("nur --stdin", &mut engine_state).unwrap();
         assert_eq!(nur_args.attach_stdin, true);
@@ -318,7 +318,7 @@ mod tests {
 
     #[test]
     fn test_parse_commandline_args_help() {
-        let mut engine_state = _create_minimal_engine_for_erg_parsing();
+        let mut engine_state = _create_minimal_engine_for_arg_parsing();
 
         let nur_args = parse_commandline_args("nur --help", &mut engine_state).unwrap();
         assert_eq!(nur_args.show_help, true);
@@ -326,7 +326,7 @@ mod tests {
 
     #[test]
     fn test_parse_commandline_args_commands() {
-        let mut engine_state = _create_minimal_engine_for_erg_parsing();
+        let mut engine_state = _create_minimal_engine_for_arg_parsing();
 
         let nur_args =
             parse_commandline_args("nur --commands 'some_command'", &mut engine_state).unwrap();
@@ -336,7 +336,7 @@ mod tests {
 
     #[test]
     fn test_parse_commandline_args_enter_shell() {
-        let mut engine_state = _create_minimal_engine_for_erg_parsing();
+        let mut engine_state = _create_minimal_engine_for_arg_parsing();
 
         let nur_args = parse_commandline_args("nur --enter-shell", &mut engine_state).unwrap();
         assert_eq!(nur_args.enter_shell, true);
@@ -344,8 +344,10 @@ mod tests {
 
     #[test]
     fn test_parse_commandline_args_dotfile_path() {
-        let mut engine_state = init_engine_state(&std::env::temp_dir()).unwrap();
-        let dotenv_path = std::env::temp_dir()
+        let project_path = tempdir().unwrap();
+        let mut engine_state = init_engine_state(&project_path.path().to_path_buf()).unwrap();
+        let dotenv_path = project_path
+            .path()
             .join(std::path::Path::new(".env"))
             .to_string_lossy()
             .into_owned();

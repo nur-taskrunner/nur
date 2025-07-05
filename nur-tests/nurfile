@@ -9,7 +9,7 @@ def "nur test-env" [] {
     std assert ($env.NUR_VERSION | is-not-empty)
     std assert ($env.NUR_TASK_NAME | is-not-empty)
     std assert ($env.NUR_TASK_CALL | is-not-empty)
-    std assert ($env.TEST == "1")
+    std assert ($env.TEST_LOADING_DOT_ENV == "1")
 }
 
 def "nur test-config" [] {

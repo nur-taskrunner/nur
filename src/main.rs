@@ -20,7 +20,6 @@ use miette::Result;
 use nu_ansi_term::Color;
 use nu_protocol::{ByteStream, PipelineData, ShellError, Span, Value};
 use std::env;
-use std::path::PathBuf;
 use std::process::ExitCode;
 
 fn main() -> Result<ExitCode, miette::ErrReport> {
@@ -172,26 +171,23 @@ fn main() -> Result<ExitCode, miette::ErrReport> {
     };
 
     // Load .env file from project directory - if requested
-    let env_iter = match parsed_nur_args.dotenv {
-        // default load .env from project directory
+    match parsed_nur_args.dotenv {
         None => {
-            let default_path = format!("{}/.env", nur_engine.state.project_path.to_string_lossy());
-            Some(
-                dotenvy::dotenv_iter().map_err(|_| {
-                    miette::ErrReport::from(NurError::DotenvFileError(default_path))
-                })?,
-            )
+            let env_path = nur_engine.state.project_path.join(".env");
+
+            if env_path.exists() {
+                nur_engine.load_dot_env(env_path)?;
+            }
         }
         Some(Value::String { val, .. }) => {
-            let path = PathBuf::from(val);
-            let path_str = path.to_string_lossy().into_owned();
-            Some(
-                dotenvy::from_filename_iter(path)
-                    .map_err(|_| miette::ErrReport::from(NurError::DotenvFileError(path_str)))?,
-            )
+            let env_path = nur_engine.state.project_path.join(&val);
+            if !env_path.exists() {
+                return Err(miette::ErrReport::from(NurError::DotenvFileError(val)));
+            }
+
+            nur_engine.load_dot_env(env_path)?
         }
-        // if input set to null, do not load any .env files
-        Some(Value::Nothing { .. }) => None,
+        Some(Value::Nothing { .. }) => {} // nothing to do
         Some(other) => {
             return Err(miette::ErrReport::from(ShellError::GenericError {
                 error: "--dotenv must either be null (do not load .env) or a filepath".into(),
@@ -200,17 +196,6 @@ fn main() -> Result<ExitCode, miette::ErrReport> {
                 help: None,
                 inner: vec![],
             }))
-        }
-    };
-
-    // Load variables into the engine environment
-    if let Some(items) = env_iter {
-        for item in items {
-            let (key, val) = item.map_err(|err| NurError::DotenvParseError(format!("{err:?}")))?;
-
-            nur_engine
-                .engine_state
-                .add_env_var(key, Value::string(val, Span::unknown()));
         }
     }
 

@@ -193,6 +193,22 @@ impl NurEngine {
         Ok(())
     }
 
+    pub(crate) fn load_dot_env(&mut self, dot_env_path: PathBuf) -> NurResult<()> {
+        // Load .env file
+        let env_iter = dotenvy::from_filename_iter(dot_env_path).unwrap();
+
+        // Load variables into the engine environment
+        for env_item in env_iter {
+            let (env_name, env_value) =
+                env_item.map_err(|err| Box::new(NurError::DotenvParseError(format!("{err:?}"))))?;
+
+            self.engine_state
+                .add_env_var(env_name, Value::string(env_value, Span::unknown()));
+        }
+
+        Ok(())
+    }
+
     pub(crate) fn load_config(&mut self) -> NurResult<()> {
         if self.state.config_path.exists() {
             self.source_and_merge_env(self.state.config_path.clone(), PipelineData::empty())?;

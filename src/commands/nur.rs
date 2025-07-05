@@ -35,7 +35,7 @@ impl Command for Nur {
                 "dotenv",
                 SyntaxShape::OneOf(vec![SyntaxShape::Nothing, SyntaxShape::Filepath]),
                 "Load the dotenv file at the specified file path (default is to load .env in the project directory). Set to null if no dotenv file should be loaded",
-                Some('d'),
+                None,
             )
             .switch(
                 "enter-shell",
