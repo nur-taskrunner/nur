@@ -829,6 +829,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "dotenvy"
+version = "0.15.7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1aaf95b3e5c8f23aa320147307562d361db0ae0d51242340f558153b4eb2439b"
+
+[[package]]
 name = "dtparse"
 version = "2.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2498,6 +2504,7 @@ dependencies = [
 name = "nur"
 version = "0.16.0+0.104.0"
 dependencies = [
+ "dotenvy",
  "miette",
  "nu-ansi-term",
  "nu-cli",

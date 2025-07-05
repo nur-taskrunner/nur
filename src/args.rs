@@ -8,7 +8,7 @@ use nu_protocol::ast::Expression;
 use nu_protocol::{
     ast::Expr,
     engine::{EngineState, Stack, StateWorkingSet},
-    ShellError,
+    ShellError, Value,
 };
 use nu_protocol::{report_parse_error, Spanned};
 use nu_utils::escape_quote_string;
@@ -115,6 +115,8 @@ pub(crate) fn parse_commandline_args(
             let show_help = call.has_flag(engine_state, &mut stack, "help")?;
             let run_commands = call.get_flag_expr("commands");
             let enter_shell = call.has_flag(engine_state, &mut stack, "enter-shell")?;
+            let dotenv = call.get_flag::<Value>(engine_state, &mut stack, "dotenv")?;
+
             #[cfg(feature = "debug")]
             let debug_output = call.has_flag(engine_state, &mut stack, "debug")?;
 
@@ -157,6 +159,7 @@ pub(crate) fn parse_commandline_args(
                 show_help,
                 run_commands,
                 enter_shell,
+                dotenv,
                 #[cfg(feature = "debug")]
                 debug_output,
             });
@@ -177,6 +180,7 @@ pub(crate) struct NurArgs {
     pub(crate) show_help: bool,
     pub(crate) run_commands: Option<Spanned<String>>,
     pub(crate) enter_shell: bool,
+    pub(crate) dotenv: Option<Value>,
     #[cfg(feature = "debug")]
     pub(crate) debug_output: bool,
 }
@@ -185,6 +189,7 @@ pub(crate) struct NurArgs {
 mod tests {
     use super::*;
     use crate::engine::init_engine_state;
+    use nu_protocol::Span;
     use tempfile::tempdir;
 
     #[test]
@@ -266,7 +271,7 @@ mod tests {
         assert_eq!(task_call, vec![] as Vec<String>);
     }
 
-    fn _create_minimal_engine_for_erg_parsing() -> EngineState {
+    fn _create_minimal_engine_for_arg_parsing() -> EngineState {
         let temp_dir = tempdir().unwrap();
         let temp_dir_path = temp_dir.path().to_path_buf();
         let engine_state = init_engine_state(&temp_dir_path).unwrap();
@@ -276,7 +281,7 @@ mod tests {
 
     #[test]
     fn test_parse_commandline_args_without_args() {
-        let mut engine_state = _create_minimal_engine_for_erg_parsing();
+        let mut engine_state = _create_minimal_engine_for_arg_parsing();
 
         let nur_args = parse_commandline_args("nur", &mut engine_state).unwrap();
         assert_eq!(nur_args.list_tasks, false);
@@ -289,7 +294,7 @@ mod tests {
 
     #[test]
     fn test_parse_commandline_args_list() {
-        let mut engine_state = _create_minimal_engine_for_erg_parsing();
+        let mut engine_state = _create_minimal_engine_for_arg_parsing();
 
         let nur_args = parse_commandline_args("nur --list", &mut engine_state).unwrap();
         assert_eq!(nur_args.list_tasks, true);
@@ -297,7 +302,7 @@ mod tests {
 
     #[test]
     fn test_parse_commandline_args_quiet() {
-        let mut engine_state = _create_minimal_engine_for_erg_parsing();
+        let mut engine_state = _create_minimal_engine_for_arg_parsing();
 
         let nur_args = parse_commandline_args("nur --quiet", &mut engine_state).unwrap();
         assert_eq!(nur_args.quiet_execution, true);
@@ -305,7 +310,7 @@ mod tests {
 
     #[test]
     fn test_parse_commandline_args_stdin() {
-        let mut engine_state = _create_minimal_engine_for_erg_parsing();
+        let mut engine_state = _create_minimal_engine_for_arg_parsing();
 
         let nur_args = parse_commandline_args("nur --stdin", &mut engine_state).unwrap();
         assert_eq!(nur_args.attach_stdin, true);
@@ -313,7 +318,7 @@ mod tests {
 
     #[test]
     fn test_parse_commandline_args_help() {
-        let mut engine_state = _create_minimal_engine_for_erg_parsing();
+        let mut engine_state = _create_minimal_engine_for_arg_parsing();
 
         let nur_args = parse_commandline_args("nur --help", &mut engine_state).unwrap();
         assert_eq!(nur_args.show_help, true);
@@ -321,7 +326,7 @@ mod tests {
 
     #[test]
     fn test_parse_commandline_args_commands() {
-        let mut engine_state = _create_minimal_engine_for_erg_parsing();
+        let mut engine_state = _create_minimal_engine_for_arg_parsing();
 
         let nur_args =
             parse_commandline_args("nur --commands 'some_command'", &mut engine_state).unwrap();
@@ -331,9 +336,36 @@ mod tests {
 
     #[test]
     fn test_parse_commandline_args_enter_shell() {
-        let mut engine_state = _create_minimal_engine_for_erg_parsing();
+        let mut engine_state = _create_minimal_engine_for_arg_parsing();
 
         let nur_args = parse_commandline_args("nur --enter-shell", &mut engine_state).unwrap();
         assert_eq!(nur_args.enter_shell, true);
+    }
+
+    #[test]
+    fn test_parse_commandline_args_dotfile_path() {
+        let project_path = tempdir().unwrap();
+        let mut engine_state = init_engine_state(&project_path.path().to_path_buf()).unwrap();
+        let dotenv_path = project_path
+            .path()
+            .join(std::path::Path::new(".env"))
+            .to_string_lossy()
+            .into_owned();
+
+        let nur_args =
+            parse_commandline_args(&format!("nur --dotenv={}", dotenv_path), &mut engine_state)
+                .unwrap();
+        assert_eq!(
+            nur_args.dotenv,
+            Some(Value::string(dotenv_path, Span::test_data()))
+        );
+    }
+
+    #[test]
+    fn test_parse_commandline_args_dotfile_null() {
+        let mut engine_state = init_engine_state(&std::env::temp_dir()).unwrap();
+
+        let nur_args = parse_commandline_args("nur --dotenv=null", &mut engine_state).unwrap();
+        assert_eq!(nur_args.dotenv, Some(Value::test_nothing()));
     }
 }

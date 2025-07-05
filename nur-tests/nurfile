@@ -11,6 +11,18 @@ def "nur test-env" [] {
     std assert ($env.NUR_TASK_CALL | is-not-empty)
 }
 
+def "nur test-dotenv" [] {
+    std assert ($env.TEST_LOADING_DOT_ENV == "1")
+}
+
+def "nur test-broken-dotenv" [] {
+    assert exit-code { run-nur --dotenv=.broken-env } 1
+}
+
+def "nur test-missing-dotenv" [] {
+    assert exit-code { run-nur --dotenv=.missing-env } 1
+}
+
 def "nur test-config" [] {
     try {
         $env.config

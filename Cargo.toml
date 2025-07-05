@@ -27,6 +27,7 @@ thiserror = "2.0.9"
 miette = { version = "7.6", features = ["fancy-no-backtrace", "fancy"] }
 nu-ansi-term = "0.50.1"
 nu-path = "0.105.1"
+dotenvy = "0.15.7"
 
 [target.'cfg(not(target_os = "windows"))'.dependencies]
 openssl = { version = "0.10", features = ["vendored"], optional = true }

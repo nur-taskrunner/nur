@@ -31,6 +31,12 @@ impl Command for Nur {
                 "Run the given commands after nurfiles have been loaded",
                 Some('c'),
             )
+            .named(
+                "dotenv",
+                SyntaxShape::OneOf(vec![SyntaxShape::Nothing, SyntaxShape::Filepath]),
+                "Load the dotenv file at the specified file path (default is to load .env in the project directory). Set to null if no dotenv file should be loaded",
+                None,
+            )
             .switch(
                 "enter-shell",
                 "Enter a nu REPL shell after the nurfiles have been loaded (use only for debugging)",
