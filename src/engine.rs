@@ -54,9 +54,9 @@ pub(crate) fn init_engine_state<P: AsRef<Path>>(project_path: P) -> NurResult<En
 
     // Load std library
     if load_standard_library(&mut engine_state).is_err() {
-        return Err(NurError::InitError(String::from(
+        return Err(Box::new(NurError::InitError(String::from(
             "Could not load std library",
-        )));
+        ))));
     }
 
     // Set some engine flags
@@ -283,7 +283,7 @@ impl NurEngine {
                 report_parse_error(&working_set, err);
             }
 
-            Err(NurError::ParseErrors(working_set.parse_errors))
+            Err(Box::new(NurError::ParseErrors(working_set.parse_errors)))
         }
     }
 
@@ -426,7 +426,7 @@ impl NurEngine {
             std::time::Instant::now(),
         ) {
             Ok(_) => Ok(()),
-            Err(_) => Err(EnteredShellError()),
+            Err(_) => Err(Box::new(EnteredShellError())),
         }
     }
 }

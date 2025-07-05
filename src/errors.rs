@@ -1,8 +1,8 @@
-use miette::Diagnostic;
+use miette::{Diagnostic, Report};
 use nu_protocol::{ParseError, ShellError};
 use thiserror::Error;
 
-pub(crate) type NurResult<T> = Result<T, NurError>;
+pub(crate) type NurResult<T> = Result<T, Box<NurError>>;
 
 #[derive(Clone, Debug, Error, Diagnostic)]
 pub enum NurError {
@@ -43,8 +43,20 @@ pub enum NurError {
     InvalidNurCall(String, String),
 }
 
-impl From<std::io::Error> for NurError {
-    fn from(_value: std::io::Error) -> NurError {
-        NurError::IoError(String::from("Could not read file"))
+impl From<std::io::Error> for Box<NurError> {
+    fn from(_value: std::io::Error) -> Box<NurError> {
+        Box::new(NurError::IoError(String::from("Could not read file")))
+    }
+}
+
+impl From<ShellError> for Box<NurError> {
+    fn from(_value: ShellError) -> Box<NurError> {
+        Box::new(NurError::from(_value))
+    }
+}
+
+impl From<Box<NurError>> for Report {
+    fn from(err: Box<NurError>) -> Self {
+        Report::new(*err) // move out of the Box
     }
 }
