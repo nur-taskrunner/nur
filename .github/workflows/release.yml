@@ -7,7 +7,7 @@ on:
       - "v[0-9]+.[0-9]+.[0-9]+*"
 
 jobs:
-  release:
+  build-release:
     strategy:
       fail-fast: false
       matrix:
@@ -40,8 +40,6 @@ jobs:
             os: ubuntu-latest
 
     runs-on: ${{matrix.os}}
-    permissions:
-      contents: write
 
     steps:
       - uses: actions/checkout@v4
@@ -52,27 +50,56 @@ jobs:
           toolchain: stable
           target: ${{ matrix.target }}
           rustflags: ''  # Keep, as otherwise the defaults will be used
+          cache-key: ${{ matrix.target }}-${{ matrix.format }} # appended to default value
 
       - name: Setup nushell
         uses: hustcer/setup-nu@v3
         with:
           version: "*"
 
+      - name: Install cargo-binstall
+        # cargo-binstall is used on Linux runners to install 'cross' in release.nu
+        # NOTE: we could try the following one-liner in release.nu:
+        #   curl -L --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/cargo-bins/cargo-binstall/main/install-from-binstall-release.sh | bash
+        # But installing cargo-binstall here ensures it is in PATH before running release.nu
+        if: ${{ runner.os }} == 'Linux'
+        uses: cargo-bins/cargo-binstall@main
+
       - name: Build nur archive
         id: build
-        run: nu .github/workflows/release.nu
+        run: nu .github/workflows/release-build.nu
         env:
           OS: ${{ matrix.os }}
           TARGET: ${{ matrix.target }}
           FORMAT: ${{ matrix.format }}
 
-      - name: Publish archives into draft release
-        uses: softprops/action-gh-release@v2
-        if: ${{ startsWith(github.ref, 'refs/tags/') }}
+      - name: upload built binary as CI artifact
+        uses: actions/upload-artifact@v4
         with:
-          draft: true
-          name: "Release ${{ github.ref_name }}"
-          generate_release_notes: true
-          files: ${{ steps.build.outputs.archive }}
+          name: nur-build-${{ matrix.os }}-${{ matrix.target }}-${{ matrix.format }}
+          path: ${{ steps.build.outputs.archive }}
+
+  draft-release:
+    needs: [build-release]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: nur-build-*
+          path: artifacts
+          merge-multiple: true
+
+      - name: Setup nushell
+        uses: hustcer/setup-nu@v3
+        with:
+          version: "*"
+
+      - name: Draft release with artifacts as assets
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: nu .github/workflows/release-draft.nu
