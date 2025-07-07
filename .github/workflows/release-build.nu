@@ -38,13 +38,14 @@ print $'Packaging ($bin) v($version) for ($target) in ($src)...'
 
 hr-line
 print $'Preparing build dependencies for ($bin)...'
-match [$os.name, $format, $target] {
-    ["ubuntu", "bin", "aarch64-unknown-linux-gnu"] => {
-        sudo apt update
-        sudo apt install -y gcc-aarch64-linux-gnu
-        $env.CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER = 'aarch64-linux-gnu-gcc'
+match [$os.name, $format] {
+    ["ubuntu", "bin"] => {
+        # NOTE: cargo-binstall should be already installed before running this script.
+        # Use `cross` to cross compile linux binaries. This avoids conflicts in
+        # GLIBC version between host and target.
+        cargo binstall --no-confirm --force cross
     }
-    ["windows", "msi", _] => {
+    ["windows", "msi"] => {
         cargo install cargo-wix
     }
 }
@@ -53,10 +54,13 @@ hr-line
 print $'Start building ($bin)...'
 match [$os.name, $format] {
     ["windows", _] => {
-        cargo build --release --all --target $target
+        cargo build --release --target $target
+    }
+    ["macos", _] => {
+        cargo build --release --target $target --features=static-link-openssl
     }
     [_, "bin"] => {
-        cargo build --release --all --target $target --features=static-link-openssl
+        cross build --release --target $target --features=static-link-openssl
     }
 }
 
@@ -109,7 +113,7 @@ hr-line
 print $'Provide archive to GitHub...'
 match $os.name {
     "windows" => {
-        # Workaround for https://github.com/softprops/action-gh-release/issues/280
+        # make CI workflow sustainable by using posix path separators on windows
         echo $"archive=($archive | str replace --all '\' '/')" | save --append $env.GITHUB_OUTPUT
     }
     _ => {
