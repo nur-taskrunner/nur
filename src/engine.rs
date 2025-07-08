@@ -9,6 +9,7 @@ use crate::names::{
 use crate::nu_version::NU_VERSION;
 use crate::scripts::{get_default_nur_config, get_default_nur_env};
 use crate::state::NurState;
+use dotenvy::{from_filename_iter as dotenv_from_filename_iter, Error as DotenvError};
 use nu_cli::{evaluate_repl, gather_parent_env_vars};
 use nu_engine::get_full_help;
 use nu_protocol::ast::Block;
@@ -195,12 +196,29 @@ impl NurEngine {
 
     pub(crate) fn load_dot_env(&mut self, dot_env_path: PathBuf) -> NurResult<()> {
         // Load .env file
-        let env_iter = dotenvy::from_filename_iter(dot_env_path).unwrap();
+        let env_iter = dotenv_from_filename_iter(&dot_env_path).map_err(|err| {
+            Box::new(NurError::DotenvFileError(
+                format!("{dot_env_path:?}"),
+                match err {
+                    DotenvError::Io(io_error) => format!("{io_error}"),
+                    DotenvError::EnvVar(env_error) => {
+                        format!("Cannot apply env variable:\n{env_error}")
+                    }
+                    _ => format!("{err:?}"),
+                },
+            ))
+        })?;
 
         // Load variables into the engine environment
         for env_item in env_iter {
-            let (env_name, env_value) =
-                env_item.map_err(|err| Box::new(NurError::DotenvParseError(format!("{err:?}"))))?;
+            let (env_name, env_value) = env_item.map_err(|err| {
+                Box::new(NurError::DotenvParseError(match err {
+                    DotenvError::LineParse(line, line_nr) => {
+                        format!("Error on line {line_nr}:\n{line}")
+                    }
+                    _ => format!("{err:?}"),
+                }))
+            })?;
 
             self.engine_state
                 .add_env_var(env_name, Value::string(env_value, Span::unknown()));
