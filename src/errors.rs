@@ -42,11 +42,11 @@ pub enum NurError {
     #[diagnostic()]
     InvalidNurCall(String, String),
 
-    #[error("Could not load dotenv file at {0}")]
+    #[error("Could not load dotenv file at {0}:\n{1}")]
     #[diagnostic()]
-    DotenvFileError(String),
+    DotenvFileError(String, String),
 
-    #[error("Could not parse dotenv file: {0}")]
+    #[error("Could not parse dotenv file: \n{0}")]
     #[diagnostic()]
     DotenvParseError(String),
 }

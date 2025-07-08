@@ -175,14 +175,23 @@ fn main() -> Result<ExitCode, miette::ErrReport> {
         None => {
             let env_path = nur_engine.state.project_path.join(".env");
 
-            if env_path.exists() {
+            if env_path.exists() && !env_path.is_dir() {
                 nur_engine.load_dot_env(env_path)?;
             }
         }
         Some(Value::String { val, .. }) => {
             let env_path = nur_engine.state.project_path.join(&val);
             if !env_path.exists() {
-                return Err(miette::ErrReport::from(NurError::DotenvFileError(val)));
+                return Err(miette::ErrReport::from(NurError::DotenvFileError(
+                    val,
+                    String::from("dotenv file does not exist"),
+                )));
+            }
+            if env_path.is_dir() {
+                return Err(miette::ErrReport::from(NurError::DotenvFileError(
+                    val,
+                    String::from("dotenv file is actually a directory"),
+                )));
             }
 
             nur_engine.load_dot_env(env_path)?
