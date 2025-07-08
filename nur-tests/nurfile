@@ -23,6 +23,10 @@ def "nur test-missing-dotenv" [] {
     assert exit-code { run-nur --dotenv=.missing-env } 1
 }
 
+def "nur test-dotenv-is-a-directory" [] {
+    assert exit-code { run-nur --dotenv=dotenv-dir } 1
+}
+
 def "nur test-config" [] {
     try {
         $env.config
