@@ -33,6 +33,9 @@ pub(crate) fn init_engine_state<P: AsRef<Path>>(project_path: P) -> NurResult<En
     let engine_state = crate::commands::create_nu_context(engine_state);
     let engine_state = crate::commands::create_nur_context(engine_state);
 
+    #[cfg(feature = "rustls-tls")]
+    nu_command::tls::CRYPTO_PROVIDER.default();
+
     // Prepare engine state to be changed
     let mut engine_state = engine_state;
 

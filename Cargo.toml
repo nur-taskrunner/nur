@@ -33,9 +33,12 @@ dotenvy = "0.15.7"
 openssl = { version = "0.10", features = ["vendored"], optional = true }
 
 [features]
-default = []
+native-tls = ["nu-command/native-tls"]
+rustls-tls = ["nu-command/rustls-tls"]
 static-link-openssl = ["dep:openssl", "nu-cmd-lang/static-link-openssl"]
 debug = []
+
+default = ["rustls-tls"]
 
 [dev-dependencies]
 tempfile = "3.14.0"
