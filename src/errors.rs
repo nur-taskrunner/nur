@@ -42,7 +42,7 @@ pub enum NurError {
     #[diagnostic()]
     InvalidNurCall(String, String),
 
-    #[error("Could not load dotenv file at {0}")]
+    #[error("Could not load dotenv file or not a file at {0}")]
     #[diagnostic()]
     DotenvFileError(String),
 
