@@ -19,7 +19,7 @@ def prepare-nurfile [] {
 def nurify-from-b5 [] {
     let global_tasks = (
         if (glob ~/.b5/Taskfile | first | path exists) {
-            cat ~/.b5/Taskfile | lines | filter {
+            cat ~/.b5/Taskfile | lines | where {
                 |it| $it starts-with "task:"
             } | each {
                 |it| $it | parse --regex "^task:(?P<name>[^(]+).*" | get name | first
@@ -28,7 +28,7 @@ def nurify-from-b5 [] {
     )
 
     prepare-nurfile
-    b5 --quiet help --tasks | lines | filter {
+    b5 --quiet help --tasks | lines | where {
         |it| $it not-in $global_tasks
     } | each {
         |it| $"def --wrapped \"nur ($it | str replace --all ':' ' ')\" [...args] {\n    ^b5 --quiet \"($it)\" ...$args\n}\n"

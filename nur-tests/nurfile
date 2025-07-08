@@ -155,7 +155,7 @@ def "nur prepare" [] {
 }
 
 def "nur run-all" [] {
-    let tests = (scope commands | filter { |it| $it.name starts-with 'nur test-' } | each { |it| $it.name | split row ' ' })
+    let tests = (scope commands | where { |it| $it.name starts-with 'nur test-' } | each { |it| $it.name | split row ' ' })
 
     let failed_tests = (
         $tests | each {
