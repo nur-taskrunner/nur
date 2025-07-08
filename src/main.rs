@@ -175,7 +175,7 @@ fn main() -> Result<ExitCode, miette::ErrReport> {
         None => {
             let env_path = nur_engine.state.project_path.join(".env");
 
-            if env_path.exists() {
+            if env_path.is_file() {
                 nur_engine.load_dot_env(env_path)?;
             }
         }

@@ -195,7 +195,11 @@ impl NurEngine {
 
     pub(crate) fn load_dot_env(&mut self, dot_env_path: PathBuf) -> NurResult<()> {
         // Load .env file
-        let env_iter = dotenvy::from_filename_iter(dot_env_path).unwrap();
+        let env_iter = dotenvy::from_filename_iter(&dot_env_path).map_err(|e| {
+            Box::new(NurError::DotenvFileError(format!(
+                "{dot_env_path:?}; {e:?}"
+            )))
+        })?;
 
         // Load variables into the engine environment
         for env_item in env_iter {
