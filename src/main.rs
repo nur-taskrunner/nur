@@ -181,8 +181,11 @@ fn main() -> Result<ExitCode, miette::ErrReport> {
         }
         Some(Value::String { val, .. }) => {
             let env_path = nur_engine.state.project_path.join(&val);
-            if !env_path.exists() {
-                return Err(miette::ErrReport::from(NurError::DotenvFileError(val)));
+            if !env_path.is_file() {
+                return Err(miette::ErrReport::from(NurError::DotenvFileError(
+                    val,
+                    String::from("This is not a file"),
+                )));
             }
 
             nur_engine.load_dot_env(env_path)?
