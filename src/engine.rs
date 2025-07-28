@@ -1,22 +1,22 @@
-use crate::args::{is_safe_taskname, parse_commandline_args, NurArgs};
+use crate::args::{NurArgs, is_safe_taskname, parse_commandline_args};
 use crate::errors::NurError::EnteredShellError;
 use crate::errors::{NurError, NurResult};
 use crate::names::{
-    NUR_ENV_NUR_TASK_CALL, NUR_ENV_NUR_TASK_NAME, NUR_ENV_NUR_VERSION, NUR_ENV_NU_LIB_DIRS,
+    NUR_ENV_NU_LIB_DIRS, NUR_ENV_NUR_TASK_CALL, NUR_ENV_NUR_TASK_NAME, NUR_ENV_NUR_VERSION,
     NUR_NAME, NUR_VAR_CONFIG_DIR, NUR_VAR_DEFAULT_LIB_DIR, NUR_VAR_PROJECT_PATH, NUR_VAR_RUN_PATH,
     NUR_VAR_TASK_NAME,
 };
 use crate::nu_version::NU_VERSION;
 use crate::scripts::{get_default_nur_config, get_default_nur_env};
 use crate::state::NurState;
-use dotenvy::{from_filename_iter as dotenv_from_filename_iter, Error as DotenvError};
+use dotenvy::{Error as DotenvError, from_filename_iter as dotenv_from_filename_iter};
 use nu_cli::{evaluate_repl, gather_parent_env_vars};
 use nu_engine::get_full_help;
 use nu_protocol::ast::Block;
 use nu_protocol::engine::{Command, Stack, StateWorkingSet};
 use nu_protocol::{
-    engine::EngineState, record, report_parse_error, report_shell_error, Config, IntoValue,
-    PipelineData, Record, ShellError, Span, Type, Value,
+    Config, IntoValue, PipelineData, Record, ShellError, Span, Type, Value, engine::EngineState,
+    record, report_parse_error, report_shell_error,
 };
 use nu_std::load_standard_library;
 use nu_utils::stdout_write_all_and_flush;
@@ -477,7 +477,7 @@ mod tests {
     };
     use std::fs::File;
     use std::io::Write;
-    use tempfile::{tempdir, TempDir};
+    use tempfile::{TempDir, tempdir};
 
     fn _has_decl<S: AsRef<str>>(engine_state: &mut EngineState, name: S) -> bool {
         engine_state
@@ -731,22 +731,28 @@ mod tests {
         let mut nurfile = File::create(&nurfile_path).unwrap();
         nurfile.write_all(b"def \"nur some-task\" [] {}").unwrap();
 
-        assert!(nur_engine
-            .engine_state
-            .get_env_var(NUR_ENV_NUR_VERSION)
-            .is_some());
+        assert!(
+            nur_engine
+                .engine_state
+                .get_env_var(NUR_ENV_NUR_VERSION)
+                .is_some()
+        );
 
         nur_engine.load_env().unwrap();
         nur_engine.load_config().unwrap();
         nur_engine.load_nurfiles().unwrap();
 
-        assert!(nur_engine
-            .engine_state
-            .get_env_var(NUR_ENV_NUR_TASK_NAME)
-            .is_some());
-        assert!(nur_engine
-            .engine_state
-            .get_env_var(NUR_ENV_NUR_TASK_CALL)
-            .is_some());
+        assert!(
+            nur_engine
+                .engine_state
+                .get_env_var(NUR_ENV_NUR_TASK_NAME)
+                .is_some()
+        );
+        assert!(
+            nur_engine
+                .engine_state
+                .get_env_var(NUR_ENV_NUR_TASK_CALL)
+                .is_some()
+        );
     }
 }
