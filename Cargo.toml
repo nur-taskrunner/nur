@@ -2,8 +2,8 @@
 name = "nur"
 description = "nur - a taskrunner based on nu shell"
 version = "0.17.2+0.105.1"
-rust-version = "1.85.1"
-edition = "2021"
+rust-version = "1.86.0"
+edition = "2024"
 license = "MIT"
 homepage = "https://nur-taskrunner.github.io/docs/"
 repository = "https://github.com/nur-taskrunner/nur"
@@ -13,20 +13,20 @@ keywords = ["nu", "taskrunner", "development", "command-line", "utility"]
 categories = ["command-line-utilities", "development-tools"]
 
 [dependencies]
-nu-cli = "0.105.1"
-nu-cmd-extra = "0.105.1"
-nu-cmd-lang = "0.105.1"
-nu-command = "0.105.1"
-nu-engine = "0.105.1"
-nu-explore = "0.105.1"
-nu-parser = "0.105.1"
-nu-protocol = "0.105.1"
-nu-std = "0.105.1"
-nu-utils = "0.105.1"
+nu-cli = "0.106.0"
+nu-cmd-extra = "0.106.0"
+nu-cmd-lang = "0.106.0"
+nu-command = "0.106.0"
+nu-engine = "0.106.0"
+nu-explore = "0.106.0"
+nu-parser = "0.106.0"
+nu-protocol = "0.106.0"
+nu-std = "0.106.0"
+nu-utils = "0.106.0"
 thiserror = "2.0.9"
 miette = { version = "7.6", features = ["fancy-no-backtrace", "fancy"] }
 nu-ansi-term = "0.50.1"
-nu-path = "0.105.1"
+nu-path = "0.106.0"
 dotenvy = "0.15.7"
 
 [target.'cfg(not(target_os = "windows"))'.dependencies]
@@ -35,7 +35,7 @@ openssl = { version = "0.10", features = ["vendored"], optional = true }
 [features]
 native-tls = ["nu-command/native-tls"]
 rustls-tls = ["nu-command/rustls-tls"]
-static-link-openssl = ["dep:openssl", "nu-cmd-lang/static-link-openssl"]
+static-link-openssl = ["dep:openssl"]
 debug = []
 
 default = ["rustls-tls"]
