@@ -23,7 +23,7 @@ nu-parser = "0.106.0"
 nu-protocol = "0.106.0"
 nu-std = "0.106.0"
 nu-utils = "0.106.0"
-thiserror = "2.0.9"
+thiserror = "2.0.12"
 miette = { version = "7.6", features = ["fancy-no-backtrace", "fancy"] }
 nu-ansi-term = "0.50.1"
 nu-path = "0.106.0"
