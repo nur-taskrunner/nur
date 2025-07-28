@@ -1,16 +1,16 @@
 use crate::commands::Nur;
 use crate::errors::{NurError, NurResult};
 use crate::names::NUR_NAME;
-use nu_engine::{get_full_help, CallExt};
+use nu_engine::{CallExt, get_full_help};
 use nu_parser::escape_for_script_arg;
 use nu_parser::parse;
 use nu_protocol::ast::Expression;
 use nu_protocol::{
+    ShellError, Value,
     ast::Expr,
     engine::{EngineState, Stack, StateWorkingSet},
-    ShellError, Value,
 };
-use nu_protocol::{report_parse_error, Spanned};
+use nu_protocol::{Spanned, report_parse_error};
 use nu_utils::escape_quote_string;
 use nu_utils::stdout_write_all_and_flush;
 

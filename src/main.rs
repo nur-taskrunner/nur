@@ -11,8 +11,8 @@ mod state;
 
 use crate::commands::Nur;
 use crate::compat::show_nurscripts_hint;
-use crate::engine::init_engine_state;
 use crate::engine::NurEngine;
+use crate::engine::init_engine_state;
 use crate::errors::NurError;
 use crate::path::current_dir_from_environment;
 use crate::state::NurState;
@@ -204,7 +204,7 @@ fn main() -> Result<ExitCode, miette::ErrReport> {
                 span: Some(other.span()),
                 help: None,
                 inner: vec![],
-            }))
+            }));
         }
     }
 

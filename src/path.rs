@@ -42,7 +42,7 @@ pub(crate) fn find_project_path<P: AsRef<Path>>(cwd: P) -> Option<PathBuf> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::fs::{create_dir, File};
+    use std::fs::{File, create_dir};
     use tempfile::tempdir;
 
     #[test]
