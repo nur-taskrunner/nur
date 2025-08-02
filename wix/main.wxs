@@ -71,7 +71,7 @@
             Keywords='Installer'
             Description='nur - a taskrunner based on nu shell'
             Manufacturer='David Danier'
-            InstallerVersion='450'
+            InstallerVersion='500'
             Languages='1033'
             Compressed='yes'
             InstallScope='perMachine'
