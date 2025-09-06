@@ -16,7 +16,7 @@ categories = ["command-line-utilities", "development-tools"]
 nu-cli = "0.107.0"
 nu-cmd-extra = "0.107.0"
 nu-cmd-lang = "0.107.0"
-nu-command = "0.107.0"
+nu-command = { version = "0.107.0", default-features = false, features = ["os"] }
 nu-engine = "0.107.0"
 nu-explore = "0.107.0"
 nu-parser = "0.107.0"
