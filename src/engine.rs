@@ -303,8 +303,8 @@ impl NurEngine {
         file_path: Option<&str>,
         contents: String,
     ) -> NurResult<Arc<Block>> {
-        if file_path.is_some() {
-            self.engine_state.file = Some(PathBuf::from(file_path.unwrap()));
+        if let Some(file_path_value) = file_path {
+            self.engine_state.file = Some(PathBuf::from(file_path_value));
         }
 
         let mut working_set = StateWorkingSet::new(&self.engine_state);
