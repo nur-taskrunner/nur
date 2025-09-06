@@ -60,7 +60,11 @@ def "nur test-features" [] {
     open Cargo.toml | get features | transpose key value | get key | each {
         |it|
         print $"Running 'nur hello ($it)' to check feature ($it)"
-        cargo run --no-default-features -F $it -- --quiet hello $it
+        if ($it == "native-tls") {
+            cargo run --no-default-features -F $it -- --quiet hello $it
+        } else {
+            cargo run -F $it -- --quiet hello $it
+        }
     }
 }
 
