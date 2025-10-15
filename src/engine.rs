@@ -15,8 +15,8 @@ use nu_engine::get_full_help;
 use nu_protocol::ast::Block;
 use nu_protocol::engine::{Command, Stack, StateWorkingSet};
 use nu_protocol::{
-    Config, IntoValue, PipelineData, Record, ShellError, Span, Type, Value, engine::EngineState,
-    record, report_parse_error, report_shell_error,
+    Config, IntoValue, PipelineData, PipelineExecutionData, Record, ShellError, Span, Type, Value,
+    engine::EngineState, record, report_parse_error, report_shell_error,
 };
 use nu_std::load_standard_library;
 use nu_utils::stdout_write_all_and_flush;
@@ -33,7 +33,7 @@ pub(crate) fn init_engine_state<P: AsRef<Path>>(project_path: P) -> NurResult<En
     let engine_state = crate::commands::create_nu_context(engine_state);
     let engine_state = crate::commands::create_nur_context(engine_state);
 
-    #[cfg(feature = "rustls-tls")]
+    #[cfg(all(feature = "rustls-tls", feature = "network"))]
     nu_command::tls::CRYPTO_PROVIDER.default();
 
     // Prepare engine state to be changed
@@ -324,7 +324,11 @@ impl NurEngine {
         }
     }
 
-    fn _execute_block(&mut self, block: &Block, input: PipelineData) -> NurResult<PipelineData> {
+    fn _execute_block(
+        &mut self,
+        block: &Block,
+        input: PipelineData,
+    ) -> NurResult<PipelineExecutionData> {
         nu_engine::get_eval_block(&self.engine_state)(
             &self.engine_state,
             &mut self.stack,
@@ -371,9 +375,11 @@ impl NurEngine {
 
         // Print result is requested
         let exit_details = if print {
-            result.print_table(&self.engine_state, &mut self.stack, false, false)
+            result
+                .body
+                .print_table(&self.engine_state, &mut self.stack, false, false)
         } else {
-            result.drain()
+            result.body.drain()
         };
 
         match exit_details {
