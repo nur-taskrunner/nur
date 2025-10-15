@@ -42,7 +42,7 @@ debug = []
 default = ["rustls-tls", "network"]
 
 [dev-dependencies]
-tempfile = "3.14.0"
+tempfile = "3.23.0"
 
 [profile.release]
 opt-level = "s"     # Optimize for size
