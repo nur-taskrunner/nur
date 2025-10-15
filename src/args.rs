@@ -106,64 +106,64 @@ pub(crate) fn parse_commandline_args(
     let mut stack = Stack::new();
 
     // We should have a successful parse now
-    if let Some(pipeline) = block.pipelines.first() {
-        if let Some(Expr::Call(call)) = pipeline.elements.first().map(|e| &e.expr.expr) {
-            // let config_file = call.get_flag_expr("some-flag");
-            let list_tasks = call.has_flag(engine_state, &mut stack, "list")?;
-            let quiet_execution = call.has_flag(engine_state, &mut stack, "quiet")?;
-            let attach_stdin = call.has_flag(engine_state, &mut stack, "stdin")?;
-            let show_help = call.has_flag(engine_state, &mut stack, "help")?;
-            let run_commands = call.get_flag_expr("commands");
-            let enter_shell = call.has_flag(engine_state, &mut stack, "enter-shell")?;
-            let dotenv = call.get_flag::<Value>(engine_state, &mut stack, "dotenv")?;
+    if let Some(pipeline) = block.pipelines.first()
+        && let Some(Expr::Call(call)) = pipeline.elements.first().map(|e| &e.expr.expr)
+    {
+        // let config_file = call.get_flag_expr("some-flag");
+        let list_tasks = call.has_flag(engine_state, &mut stack, "list")?;
+        let quiet_execution = call.has_flag(engine_state, &mut stack, "quiet")?;
+        let attach_stdin = call.has_flag(engine_state, &mut stack, "stdin")?;
+        let show_help = call.has_flag(engine_state, &mut stack, "help")?;
+        let run_commands = call.get_flag_expr("commands");
+        let enter_shell = call.has_flag(engine_state, &mut stack, "enter-shell")?;
+        let dotenv = call.get_flag::<Value>(engine_state, &mut stack, "dotenv")?;
 
-            #[cfg(feature = "debug")]
-            let debug_output = call.has_flag(engine_state, &mut stack, "debug")?;
+        #[cfg(feature = "debug")]
+        let debug_output = call.has_flag(engine_state, &mut stack, "debug")?;
 
-            if call.has_flag(engine_state, &mut stack, "version")? {
-                let version = env!("CARGO_PKG_VERSION").to_string();
-                let _ = std::panic::catch_unwind(move || {
-                    stdout_write_all_and_flush(format!("{version}\n"))
-                });
-
-                std::process::exit(0);
-            }
-
-            fn extract_contents(
-                expression: Option<&Expression>,
-            ) -> Result<Option<Spanned<String>>, Box<ShellError>> {
-                if let Some(expr) = expression {
-                    let str = expr.as_string();
-                    if let Some(str) = str {
-                        Ok(Some(Spanned {
-                            item: str,
-                            span: expr.span,
-                        }))
-                    } else {
-                        Err(Box::new(ShellError::TypeMismatch {
-                            err_message: "string".into(),
-                            span: expr.span,
-                        }))
-                    }
-                } else {
-                    Ok(None)
-                }
-            }
-
-            let run_commands = extract_contents(run_commands)?;
-
-            return Ok(NurArgs {
-                list_tasks,
-                quiet_execution,
-                attach_stdin,
-                show_help,
-                run_commands,
-                enter_shell,
-                dotenv,
-                #[cfg(feature = "debug")]
-                debug_output,
+        if call.has_flag(engine_state, &mut stack, "version")? {
+            let version = env!("CARGO_PKG_VERSION").to_string();
+            let _ = std::panic::catch_unwind(move || {
+                stdout_write_all_and_flush(format!("{version}\n"))
             });
+
+            std::process::exit(0);
         }
+
+        fn extract_contents(
+            expression: Option<&Expression>,
+        ) -> Result<Option<Spanned<String>>, Box<ShellError>> {
+            if let Some(expr) = expression {
+                let str = expr.as_string();
+                if let Some(str) = str {
+                    Ok(Some(Spanned {
+                        item: str,
+                        span: expr.span,
+                    }))
+                } else {
+                    Err(Box::new(ShellError::TypeMismatch {
+                        err_message: "string".into(),
+                        span: expr.span,
+                    }))
+                }
+            } else {
+                Ok(None)
+            }
+        }
+
+        let run_commands = extract_contents(run_commands)?;
+
+        return Ok(NurArgs {
+            list_tasks,
+            quiet_execution,
+            attach_stdin,
+            show_help,
+            run_commands,
+            enter_shell,
+            dotenv,
+            #[cfg(feature = "debug")]
+            debug_output,
+        });
     }
 
     // Just give the help and exit if the above fails
