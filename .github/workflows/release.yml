@@ -18,6 +18,7 @@ jobs:
           - aarch64-pc-windows-msvc
           - x86_64-unknown-linux-gnu
           - aarch64-unknown-linux-gnu
+          - armv7-unknown-linux-gnueabihf
         format: ['bin']
         include:
           - target: aarch64-apple-darwin
@@ -37,6 +38,8 @@ jobs:
           - target: x86_64-unknown-linux-gnu
             os: ubuntu-latest
           - target: aarch64-unknown-linux-gnu
+            os: ubuntu-latest
+          - target: armv7-unknown-linux-gnueabihf
             os: ubuntu-latest
 
     runs-on: ${{matrix.os}}
