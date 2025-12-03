@@ -1,1 +1,1 @@
-pub(crate) const NU_VERSION: &str = "0.109.0";
+pub(crate) const NU_VERSION: &str = "0.109.1";
