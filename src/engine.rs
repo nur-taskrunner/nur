@@ -317,7 +317,7 @@ impl NurEngine {
             Ok(block)
         } else {
             if let Some(err) = working_set.parse_errors.first() {
-                report_parse_error(&working_set, err);
+                report_parse_error(None, &working_set, err);
             }
 
             Err(Box::new(NurError::ParseErrors(working_set.parse_errors)))
@@ -336,7 +336,7 @@ impl NurEngine {
             input,
         )
         .map_err(|err| {
-            report_shell_error(&self.engine_state, &err);
+            report_shell_error(None, &self.engine_state, &err);
             std::process::exit(1);
         })
     }
@@ -364,11 +364,11 @@ impl NurEngine {
             match self.engine_state.cwd(Some(&self.stack)) {
                 Ok(_cwd) => {
                     if let Err(e) = self.engine_state.merge_env(&mut self.stack) {
-                        report_shell_error(&self.engine_state, &e);
+                        report_shell_error(None, &self.engine_state, &e);
                     }
                 }
                 Err(e) => {
-                    report_shell_error(&self.engine_state, &e);
+                    report_shell_error(None, &self.engine_state, &e);
                 }
             }
         }
@@ -385,7 +385,7 @@ impl NurEngine {
         match exit_details {
             Ok(()) => Ok(0),
             Err(err) => {
-                report_shell_error(&self.engine_state, &err);
+                report_shell_error(None, &self.engine_state, &err);
 
                 match err {
                     ShellError::NonZeroExitCode {
