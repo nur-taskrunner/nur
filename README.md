@@ -7,6 +7,8 @@ in your tasks.
 
 ## Quick overview and example
 
+![Demo session](assets/demo.gif)
+
 `nur` allows you to execute tasks defined in a file called `nurfile`. It will look through your
 current working directory and all its parents to look for this file. When it has found the `nurfile`
 it will change to the directory the file was found in and then `source` the file into `nu` script.
