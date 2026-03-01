@@ -118,6 +118,7 @@ def "nur release" [
 
     print ""
     print $"Creating release commit and tag '(ansi purple)v($main_version)(ansi reset)'"
+    cargo update
     git add Cargo.toml Cargo.lock
     git commit -m $"release: 🔖 v($main_version)"
     git tag $"v($version)"
