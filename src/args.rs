@@ -10,7 +10,7 @@ use nu_protocol::{
     ast::Expr,
     engine::{EngineState, Stack, StateWorkingSet},
 };
-use nu_protocol::{Spanned, report_parse_error};
+use nu_protocol::{Span, Spanned, report_parse_error};
 use nu_utils::escape_quote_string;
 use nu_utils::stdout_write_all_and_flush;
 
@@ -167,7 +167,8 @@ pub(crate) fn parse_commandline_args(
     }
 
     // Just give the help and exit if the above fails
-    let full_help = get_full_help(&Nur, engine_state, &mut stack);
+    let call = nu_protocol::engine::Call::new(Span::unknown());
+    let full_help = get_full_help(&Nur, engine_state, &mut stack, call.head);
     print!("{full_help}");
     std::process::exit(1);
 }
