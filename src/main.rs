@@ -18,6 +18,7 @@ use crate::path::current_dir_from_environment;
 use crate::state::NurState;
 use miette::Result;
 use nu_ansi_term::Color;
+use nu_protocol::shell_error::generic::GenericError;
 use nu_protocol::{ByteStream, PipelineData, ShellError, Span, Value};
 use std::env;
 use std::process::ExitCode;
@@ -197,14 +198,13 @@ fn main() -> Result<ExitCode, miette::ErrReport> {
             nur_engine.load_dot_env(env_path)?
         }
         Some(Value::Nothing { .. }) => {} // nothing to do
-        Some(other) => {
-            return Err(miette::ErrReport::from(ShellError::GenericError {
-                error: "--dotenv must either be null (do not load .env) or a filepath".into(),
-                msg: "".into(),
-                span: Some(other.span()),
-                help: None,
-                inner: vec![],
-            }));
+        Some(_) => {
+            return Err(miette::ErrReport::from(ShellError::Generic(
+                GenericError::new_internal(
+                    "--dotenv must either be null (do not load .env) or a filepath",
+                    "",
+                ),
+            )));
         }
     }
 

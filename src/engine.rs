@@ -455,7 +455,8 @@ impl NurEngine {
     }
 
     pub(crate) fn print_help(&mut self, command: &dyn Command) {
-        let full_help = get_full_help(command, &self.engine_state, &mut self.stack);
+        let call = nu_protocol::engine::Call::new(Span::unknown());
+        let full_help = get_full_help(command, &self.engine_state, &mut self.stack, call.head);
 
         let _ = std::panic::catch_unwind(move || stdout_write_all_and_flush(full_help));
     }
@@ -466,7 +467,7 @@ impl NurEngine {
             self.stack.clone(),
             None,
             None,
-            std::time::Instant::now(),
+            nu_utils::time::Instant::now(),
         ) {
             Ok(_) => Ok(()),
             Err(_) => Err(Box::new(EnteredShellError())),
