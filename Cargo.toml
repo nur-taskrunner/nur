@@ -1,7 +1,7 @@
 [package]
 name = "nur"
 description = "nur - a taskrunner based on nu shell"
-version = "0.23.0+0.112.1"
+version = "0.24.0+0.112.1"
 rust-version = "1.92.0"
 edition = "2024"
 license = "MIT"
