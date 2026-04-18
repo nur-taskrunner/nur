@@ -13,20 +13,20 @@ keywords = ["nu", "taskrunner", "development", "command-line", "utility"]
 categories = ["command-line-utilities", "development-tools"]
 
 [dependencies]
-nu-cli = "0.112.1"
-nu-cmd-extra = "0.112.1"
-nu-cmd-lang = "0.112.1"
-nu-command = { version = "0.112.1", default-features = false, features = ["os"] }
-nu-engine = "0.112.1"
-nu-explore = "0.112.1"
-nu-parser = "0.112.1"
-nu-protocol = "0.112.1"
-nu-std = "0.112.1"
-nu-utils = "0.112.1"
+nu-cli = "0.112.2"
+nu-cmd-extra = "0.112.2"
+nu-cmd-lang = "0.112.2"
+nu-command = { version = "0.112.2", default-features = false, features = ["os"] }
+nu-engine = "0.112.2"
+nu-explore = "0.112.2"
+nu-parser = "0.112.2"
+nu-protocol = "0.112.2"
+nu-std = "0.112.2"
+nu-utils = "0.112.2"
 thiserror = "2.0.18"
 miette = { version = "7.6", features = ["fancy-no-backtrace", "fancy"] }
 nu-ansi-term = "0.50.3"
-nu-path = "0.112.1"
+nu-path = "0.112.2"
 dotenvy = "0.15.7"
 
 [target.'cfg(not(target_os = "windows"))'.dependencies]
