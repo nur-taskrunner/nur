@@ -241,11 +241,17 @@ impl NurEngine {
     }
 
     pub(crate) fn load_nurfiles(&mut self) -> NurResult<()> {
-        if self.state.nurfile_path.exists() {
-            self.source(self.state.nurfile_path.clone(), PipelineData::empty())?;
+        if self.state.nurfile_path.is_some() {
+            self.source(
+                self.state.nurfile_path.clone().unwrap(),
+                PipelineData::empty(),
+            )?;
         }
-        if self.state.local_nurfile_path.exists() {
-            self.source(self.state.local_nurfile_path.clone(), PipelineData::empty())?;
+        if self.state.local_nurfile_path.is_some() {
+            self.source(
+                self.state.local_nurfile_path.clone().unwrap(),
+                PipelineData::empty(),
+            )?;
         }
 
         self._find_task_name();
@@ -480,7 +486,7 @@ mod tests {
     use super::*;
     use crate::names::{
         NUR_CONFIG_CONFIG_FILENAME, NUR_CONFIG_DIR, NUR_CONFIG_ENV_FILENAME, NUR_CONFIG_LIB_PATH,
-        NUR_FILE, NUR_LOCAL_FILE,
+        NUR_FILE, NUR_FILE_DOT_NU, NUR_LOCAL_FILE, NUR_LOCAL_FILE_DOT_NU,
     };
     use std::fs::File;
     use std::io::Write;
@@ -531,10 +537,12 @@ mod tests {
         assert_eq!(engine_state.history_enabled, false);
     }
 
-    fn _prepare_nur_engine(temp_dir: &TempDir) -> NurEngine {
+    fn _prepare_nur_engine(temp_dir: &TempDir, create_nurfile: bool) -> NurEngine {
         let temp_dir_path = temp_dir.path().to_path_buf();
-        let nurfile_path = temp_dir.path().join(NUR_FILE);
-        File::create(&nurfile_path).unwrap();
+        if create_nurfile {
+            let nurfile_path = temp_dir.path().join(NUR_FILE);
+            File::create(&nurfile_path).unwrap();
+        }
 
         let args = vec![
             String::from("nur"),
@@ -549,12 +557,22 @@ mod tests {
 
     fn _cleanup_nur_engine(temp_dir: &TempDir) {
         let nurfile_path = temp_dir.path().join(NUR_FILE);
-        let nurfile_local_path = temp_dir.path().join(NUR_FILE);
+        let nurfile_dot_nu_path = temp_dir.path().join(NUR_FILE_DOT_NU);
+        let nurfile_local_path = temp_dir.path().join(NUR_LOCAL_FILE);
+        let nurfile_local_dot_nu_path = temp_dir.path().join(NUR_LOCAL_FILE_DOT_NU);
         let config_dir = temp_dir.path().join(NUR_CONFIG_DIR);
 
-        fs::remove_file(nurfile_path).unwrap();
+        if nurfile_path.exists() {
+            fs::remove_file(nurfile_path).unwrap();
+        }
+        if nurfile_dot_nu_path.exists() {
+            fs::remove_file(nurfile_dot_nu_path).unwrap();
+        }
         if nurfile_local_path.exists() {
             fs::remove_file(nurfile_local_path).unwrap();
+        }
+        if nurfile_local_dot_nu_path.exists() {
+            fs::remove_file(nurfile_local_dot_nu_path).unwrap();
         }
         if config_dir.exists() {
             fs::remove_dir_all(config_dir).unwrap();
@@ -580,7 +598,7 @@ mod tests {
     #[test]
     fn test_nur_engine_will_include_std_lib() {
         let temp_dir = tempdir().unwrap();
-        let mut nur_engine = _prepare_nur_engine(&temp_dir);
+        let mut nur_engine = _prepare_nur_engine(&temp_dir, true);
 
         assert!(nur_engine.eval("use std", PipelineData::empty()).is_ok());
 
@@ -590,7 +608,7 @@ mod tests {
     #[test]
     fn test_nur_engine_will_set_nur_variable() {
         let temp_dir = tempdir().unwrap();
-        let mut nur_engine = _prepare_nur_engine(&temp_dir);
+        let mut nur_engine = _prepare_nur_engine(&temp_dir, true);
 
         assert!(_has_var(&mut nur_engine, "nur"));
 
@@ -600,7 +618,6 @@ mod tests {
     #[test]
     fn test_nur_engine_will_load_nurfiles() {
         let temp_dir = tempdir().unwrap();
-        let mut nur_engine = _prepare_nur_engine(&temp_dir);
 
         let nurfile_path = temp_dir.path().join(NUR_FILE);
         let mut nurfile = File::create(&nurfile_path).unwrap();
@@ -611,6 +628,7 @@ mod tests {
             .write_all(b"def nurfile-local-command [] {}")
             .unwrap();
 
+        let mut nur_engine = _prepare_nur_engine(&temp_dir, false);
         nur_engine.load_env().unwrap();
         nur_engine.load_config().unwrap();
         nur_engine.load_nurfiles().unwrap();
@@ -625,10 +643,39 @@ mod tests {
     }
 
     #[test]
+    fn test_nur_engine_will_load_nurfiles_dot_nu() {
+        let temp_dir = tempdir().unwrap();
+        let nurfile_path = temp_dir.path().join(NUR_FILE_DOT_NU);
+        let mut nurfile = File::create(&nurfile_path).unwrap();
+        nurfile
+            .write_all(b"def nurfile-dot-nu-command [] {}")
+            .unwrap();
+        let nurfile_local_path = temp_dir.path().join(NUR_LOCAL_FILE_DOT_NU);
+        let mut nurfile_local = File::create(&nurfile_local_path).unwrap();
+        nurfile_local
+            .write_all(b"def nurfile-local-dot-nu-command [] {}")
+            .unwrap();
+
+        let mut nur_engine = _prepare_nur_engine(&temp_dir, false);
+        nur_engine.load_env().unwrap();
+        nur_engine.load_config().unwrap();
+        nur_engine.load_nurfiles().unwrap();
+
+        assert!(_has_decl(
+            &mut nur_engine.engine_state,
+            "nurfile-dot-nu-command"
+        ));
+        assert!(_has_decl(
+            &mut nur_engine.engine_state,
+            "nurfile-local-dot-nu-command"
+        ));
+
+        _cleanup_nur_engine(&temp_dir);
+    }
+
+    #[test]
     fn test_nur_engine_will_load_env_and_config() {
         let temp_dir = tempdir().unwrap();
-        let mut nur_engine = _prepare_nur_engine(&temp_dir);
-
         let config_dir = temp_dir.path().join(NUR_CONFIG_DIR);
         fs::create_dir(config_dir.clone()).unwrap();
         let env_path = config_dir.join(NUR_CONFIG_ENV_FILENAME);
@@ -638,6 +685,7 @@ mod tests {
         let mut config_file = File::create(&config_path).unwrap();
         config_file.write_all(b"def config-command [] {}").unwrap();
 
+        let mut nur_engine = _prepare_nur_engine(&temp_dir, true);
         nur_engine.load_env().unwrap();
         nur_engine.load_config().unwrap();
         nur_engine.load_nurfiles().unwrap();
@@ -651,8 +699,6 @@ mod tests {
     #[test]
     fn test_nur_engine_will_allow_scripts() {
         let temp_dir = tempdir().unwrap();
-        let mut nur_engine = _prepare_nur_engine(&temp_dir);
-
         let config_dir = temp_dir.path().join(NUR_CONFIG_DIR);
         fs::create_dir(config_dir.clone()).unwrap();
         let scripts_dir = config_dir.join(NUR_CONFIG_LIB_PATH);
@@ -663,6 +709,7 @@ mod tests {
             .write_all(b"export def module-command [] {}")
             .unwrap();
 
+        let mut nur_engine = _prepare_nur_engine(&temp_dir, true);
         nur_engine.load_env().unwrap();
         nur_engine.load_config().unwrap();
         nur_engine.load_nurfiles().unwrap();
@@ -679,12 +726,11 @@ mod tests {
     #[test]
     fn test_nur_engine_will_set_task_name() {
         let temp_dir = tempdir().unwrap();
-        let mut nur_engine = _prepare_nur_engine(&temp_dir);
-
         let nurfile_path = temp_dir.path().join(NUR_FILE);
         let mut nurfile = File::create(&nurfile_path).unwrap();
         nurfile.write_all(b"def \"nur some-task\" [] {}").unwrap();
 
+        let mut nur_engine = _prepare_nur_engine(&temp_dir, false);
         nur_engine.load_env().unwrap();
         nur_engine.load_config().unwrap();
         nur_engine.load_nurfiles().unwrap();
@@ -697,11 +743,10 @@ mod tests {
     #[test]
     fn test_nur_engine_will_check_task_name_exists() {
         let temp_dir = tempdir().unwrap();
-        let mut nur_engine = _prepare_nur_engine(&temp_dir);
-
         let nurfile_path = temp_dir.path().join(NUR_FILE);
         File::create(&nurfile_path).unwrap();
 
+        let mut nur_engine = _prepare_nur_engine(&temp_dir, false);
         nur_engine.load_env().unwrap();
         nur_engine.load_config().unwrap();
         nur_engine.load_nurfiles().unwrap();
@@ -712,14 +757,13 @@ mod tests {
     #[test]
     fn test_nur_engine_will_allow_sub_tasks() {
         let temp_dir = tempdir().unwrap();
-        let mut nur_engine = _prepare_nur_engine(&temp_dir);
-
         let nurfile_path = temp_dir.path().join(NUR_FILE);
         let mut nurfile = File::create(&nurfile_path).unwrap();
         nurfile
             .write_all(b"def \"nur some-task sub-task\" [] {}")
             .unwrap();
 
+        let mut nur_engine = _prepare_nur_engine(&temp_dir, false);
         nur_engine.load_env().unwrap();
         nur_engine.load_config().unwrap();
         nur_engine.load_nurfiles().unwrap();
@@ -732,12 +776,11 @@ mod tests {
     #[test]
     fn test_nur_engine_will_set_env() {
         let temp_dir = tempdir().unwrap();
-        let mut nur_engine = _prepare_nur_engine(&temp_dir);
-
         let nurfile_path = temp_dir.path().join(NUR_FILE);
         let mut nurfile = File::create(&nurfile_path).unwrap();
         nurfile.write_all(b"def \"nur some-task\" [] {}").unwrap();
 
+        let mut nur_engine = _prepare_nur_engine(&temp_dir, false);
         assert!(
             nur_engine
                 .engine_state

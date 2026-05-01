@@ -2,9 +2,8 @@ use crate::args::gather_commandline_args;
 use crate::errors::NurResult;
 use crate::names::{
     NUR_CONFIG_CONFIG_FILENAME, NUR_CONFIG_DIR, NUR_CONFIG_ENV_FILENAME, NUR_CONFIG_LIB_PATH,
-    NUR_FILE, NUR_LOCAL_FILE,
 };
-use crate::path::find_project_path;
+use crate::path::{find_local_nurfile, find_nurfile, find_project_path};
 use std::path::PathBuf;
 
 #[derive(Clone)]
@@ -18,8 +17,8 @@ pub(crate) struct NurState {
     pub(crate) env_path: PathBuf,
     pub(crate) config_path: PathBuf,
 
-    pub(crate) nurfile_path: PathBuf,
-    pub(crate) local_nurfile_path: PathBuf,
+    pub(crate) nurfile_path: Option<PathBuf>,
+    pub(crate) local_nurfile_path: Option<PathBuf>,
 
     pub(crate) args_to_nur: Vec<String>,
     pub(crate) has_task_call: bool,
@@ -41,8 +40,8 @@ impl NurState {
         let config_path = config_dir.join(NUR_CONFIG_CONFIG_FILENAME);
 
         // Set nurfiles
-        let nurfile_path = project_path.join(NUR_FILE);
-        let local_nurfile_path = project_path.join(NUR_LOCAL_FILE);
+        let nurfile_path = find_nurfile(&project_path);
+        let local_nurfile_path = find_local_nurfile(&project_path);
 
         // Parse args into bits
         let (args_to_nur, has_task_call, task_call) = gather_commandline_args(args)?;
@@ -70,6 +69,8 @@ impl NurState {
 
 #[cfg(test)]
 mod tests {
+    use crate::names::{NUR_FILE, NUR_FILE_DOT_NU, NUR_LOCAL_FILE, NUR_LOCAL_FILE_DOT_NU};
+
     use super::*;
     use std::fs::File;
     use tempfile::tempdir;
@@ -80,6 +81,8 @@ mod tests {
         let temp_dir_path = temp_dir.path().to_path_buf();
         let nurfile_path = temp_dir.path().join(NUR_FILE);
         File::create(&nurfile_path).unwrap();
+        let nurfile_local_path = temp_dir.path().join(NUR_LOCAL_FILE);
+        File::create(&nurfile_local_path).unwrap();
 
         // Setup test
         let args = vec![
@@ -100,10 +103,10 @@ mod tests {
         assert_eq!(state.env_path, temp_dir_path.join(".nur/env.nu"));
         assert_eq!(state.config_path, temp_dir_path.join(".nur/config.nu"));
 
-        assert_eq!(state.nurfile_path, temp_dir_path.join("nurfile"));
+        assert_eq!(state.nurfile_path.unwrap(), temp_dir_path.join(NUR_FILE),);
         assert_eq!(
-            state.local_nurfile_path,
-            temp_dir_path.join("nurfile.local")
+            state.local_nurfile_path.unwrap(),
+            temp_dir_path.join(NUR_LOCAL_FILE)
         );
 
         assert_eq!(
@@ -118,6 +121,38 @@ mod tests {
                 String::from("some_task"),
                 String::from("task_arg")
             ]
+        );
+
+        // Clean up
+        std::fs::remove_file(nurfile_path).unwrap();
+    }
+
+    #[test]
+    fn test_nur_state_dot_nu_files() {
+        let temp_dir = tempdir().unwrap();
+        let temp_dir_path = temp_dir.path().to_path_buf();
+        let nurfile_path = temp_dir.path().join(NUR_FILE_DOT_NU);
+        File::create(&nurfile_path).unwrap();
+        let nurfile_local_path = temp_dir.path().join(NUR_LOCAL_FILE_DOT_NU);
+        File::create(&nurfile_local_path).unwrap();
+
+        // Setup test
+        let args = vec![
+            String::from("nur"),
+            String::from("--quiet"),
+            String::from("some_task"),
+            String::from("task_arg"),
+        ];
+        let state = NurState::new(temp_dir_path.clone(), args).unwrap();
+
+        // Check nurfile paths are ok
+        assert_eq!(
+            state.nurfile_path.unwrap(),
+            temp_dir_path.join(NUR_FILE_DOT_NU),
+        );
+        assert_eq!(
+            state.local_nurfile_path.unwrap(),
+            temp_dir_path.join(NUR_LOCAL_FILE_DOT_NU)
         );
 
         // Clean up
@@ -148,11 +183,8 @@ mod tests {
         assert_eq!(state.env_path, temp_dir_path.join(".nur/env.nu"));
         assert_eq!(state.config_path, temp_dir_path.join(".nur/config.nu"));
 
-        assert_eq!(state.nurfile_path, temp_dir_path.join("nurfile"));
-        assert_eq!(
-            state.local_nurfile_path,
-            temp_dir_path.join("nurfile.local")
-        );
+        assert!(state.nurfile_path.is_none());
+        assert!(state.local_nurfile_path.is_none());
 
         assert_eq!(
             state.args_to_nur,
@@ -188,11 +220,8 @@ mod tests {
         assert_eq!(state.env_path, temp_dir_path.join(".nur/env.nu"));
         assert_eq!(state.config_path, temp_dir_path.join(".nur/config.nu"));
 
-        assert_eq!(state.nurfile_path, temp_dir_path.join("nurfile"));
-        assert_eq!(
-            state.local_nurfile_path,
-            temp_dir_path.join("nurfile.local")
-        );
+        assert!(state.nurfile_path.is_none());
+        assert!(state.local_nurfile_path.is_none());
 
         assert_eq!(
             state.args_to_nur,

@@ -21,4 +21,6 @@ pub(crate) const NUR_VAR_DEFAULT_LIB_DIR: &str = "default-lib-dir";
 
 // nurfile names
 pub(crate) const NUR_FILE: &str = "nurfile";
+pub(crate) const NUR_FILE_DOT_NU: &str = "nurfile.nu";
 pub(crate) const NUR_LOCAL_FILE: &str = "nurfile.local";
+pub(crate) const NUR_LOCAL_FILE_DOT_NU: &str = "nurfile.local.nu";

@@ -128,6 +128,10 @@ def "nur test-nur-list" [] {
     std assert ($nur_list | is-not-empty)
 }
 
+def "nur test-loading-nurfile-local-nu" [] {
+    std assert ((run-nur do-loading-nurfile-local-nu) == "ok")
+}
+
 # Utils and other commands
 
 def is-windows [] {
