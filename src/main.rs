@@ -14,6 +14,7 @@ use crate::compat::show_nurscripts_hint;
 use crate::engine::NurEngine;
 use crate::engine::init_engine_state;
 use crate::errors::NurError;
+use crate::names::NUR_QUIET;
 use crate::path::current_dir_from_environment;
 use crate::state::NurState;
 use miette::Result;
@@ -40,7 +41,7 @@ fn main() -> Result<ExitCode, miette::ErrReport> {
         .get(&nur_engine.engine_state);
 
     // Parse args
-    let parsed_nur_args = nur_engine.parse_args();
+    let mut parsed_nur_args = nur_engine.parse_args();
 
     #[cfg(feature = "debug")]
     if parsed_nur_args.debug_output {
@@ -178,6 +179,11 @@ fn main() -> Result<ExitCode, miette::ErrReport> {
 
             if env_path.exists() && !env_path.is_dir() {
                 nur_engine.load_dot_env(env_path)?;
+
+                // If we now have NUR_QUIET set, update parsed args state
+                if nur_engine.engine_state.get_env_var(NUR_QUIET).is_some() {
+                    parsed_nur_args.quiet_execution = true;
+                }
             }
         }
         Some(Value::String { val, .. }) => {
@@ -195,7 +201,12 @@ fn main() -> Result<ExitCode, miette::ErrReport> {
                 )));
             }
 
-            nur_engine.load_dot_env(env_path)?
+            nur_engine.load_dot_env(env_path)?;
+
+            // If we now have NUR_QUIET set, update parsed args state
+            if nur_engine.engine_state.get_env_var(NUR_QUIET).is_some() {
+                parsed_nur_args.quiet_execution = true;
+            }
         }
         Some(Value::Nothing { .. }) => {} // nothing to do
         Some(_) => {

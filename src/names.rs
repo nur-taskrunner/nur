@@ -11,6 +11,7 @@ pub(crate) const NUR_ENV_NU_LIB_DIRS: &str = "NU_LIB_DIRS";
 pub(crate) const NUR_ENV_NUR_VERSION: &str = "NUR_VERSION";
 pub(crate) const NUR_ENV_NUR_TASK_CALL: &str = "NUR_TASK_CALL";
 pub(crate) const NUR_ENV_NUR_TASK_NAME: &str = "NUR_TASK_NAME";
+pub(crate) const NUR_QUIET: &str = "NUR_QUIET";
 
 // $nur variable names
 pub(crate) const NUR_VAR_RUN_PATH: &str = "run-path";

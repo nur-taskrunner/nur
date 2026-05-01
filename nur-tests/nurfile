@@ -155,7 +155,7 @@ def "assert exit-code" [
 def --wrapped run-nur [
     ...args
 ] {
-    ^$nurcmd --quiet ...$args
+    NUR_QUIET=1 ^$nurcmd ...$args
 }
 
 def "nur prepare" [] {

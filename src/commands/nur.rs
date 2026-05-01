@@ -21,7 +21,7 @@ impl Command for Nur {
             .switch("list", "List available tasks and then just exit", Some('l'))
             .switch(
                 "quiet",
-                "Do not output anything but what the task produces",
+                "Do not output anything but what the task produces (you can also set the NUR_QUIET environment variable)",
                 Some('q'),
             )
             .switch("stdin", "Attach stdin to called nur task", None)

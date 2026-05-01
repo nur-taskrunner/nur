@@ -1,6 +1,8 @@
+use std::env;
+
 use crate::commands::Nur;
 use crate::errors::{NurError, NurResult};
-use crate::names::NUR_NAME;
+use crate::names::{NUR_NAME, NUR_QUIET};
 use nu_engine::{CallExt, get_full_help};
 use nu_parser::escape_for_script_arg;
 use nu_parser::parse;
@@ -111,7 +113,8 @@ pub(crate) fn parse_commandline_args(
     {
         // let config_file = call.get_flag_expr("some-flag");
         let list_tasks = call.has_flag(engine_state, &mut stack, "list")?;
-        let quiet_execution = call.has_flag(engine_state, &mut stack, "quiet")?;
+        let quiet_execution =
+            call.has_flag(engine_state, &mut stack, "quiet")? || env::var(NUR_QUIET).is_ok();
         let attach_stdin = call.has_flag(engine_state, &mut stack, "stdin")?;
         let show_help = call.has_flag(engine_state, &mut stack, "help")?;
         let run_commands = call.get_flag_expr("commands");
