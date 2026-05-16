@@ -1,4 +1,3 @@
-use crate::names::{NUR_FILE, NUR_FILE_DOT_NU, NUR_LOCAL_FILE, NUR_LOCAL_FILE_DOT_NU};
 use std::path::{Path, PathBuf};
 
 /// Get the directory where the Nushell executable is located.
@@ -22,11 +21,14 @@ pub(crate) fn current_dir_from_environment() -> PathBuf {
     current_exe_directory()
 }
 
-pub(crate) fn find_project_path<P: AsRef<Path>>(cwd: P) -> Option<PathBuf> {
+pub(crate) fn find_project_path<P: AsRef<Path>>(
+    cwd: P,
+    nurfile_names: &Vec<&str>,
+) -> Option<PathBuf> {
     let mut path = cwd.as_ref();
 
     loop {
-        if find_nurfile(path).is_some() {
+        if find_nurfile(path, nurfile_names).is_some() {
             return Some(path.to_path_buf());
         }
 
@@ -38,26 +40,16 @@ pub(crate) fn find_project_path<P: AsRef<Path>>(cwd: P) -> Option<PathBuf> {
     }
 }
 
-pub(crate) fn find_nurfile<P: AsRef<Path>>(project_path_: P) -> Option<PathBuf> {
+pub(crate) fn find_nurfile<P: AsRef<Path>>(
+    project_path_: P,
+    nurfile_names: &Vec<&str>,
+) -> Option<PathBuf> {
     let project_path = project_path_.as_ref();
 
-    for nur_file_name in [NUR_FILE, NUR_FILE_DOT_NU] {
+    for nur_file_name in nurfile_names {
         let nur_file_path = project_path.join(nur_file_name);
         if nur_file_path.exists() {
             return Some(nur_file_path);
-        }
-    }
-
-    None
-}
-
-pub(crate) fn find_local_nurfile<P: AsRef<Path>>(project_path_: P) -> Option<PathBuf> {
-    let project_path = project_path_.as_ref();
-
-    for nur_local_file_name in [NUR_LOCAL_FILE, NUR_LOCAL_FILE_DOT_NU] {
-        let nur_local_file_path = project_path.join(nur_local_file_name);
-        if nur_local_file_path.exists() {
-            return Some(nur_local_file_path);
         }
     }
 
@@ -70,6 +62,8 @@ mod tests {
     use std::fs::{File, create_dir};
     use tempfile::tempdir;
 
+    use crate::names::{NUR_FILE, NUR_FILE_DOT_NU};
+
     #[test]
     fn test_find_project_path() {
         // Create a temporary directory and a "nurfile" inside it
@@ -80,7 +74,8 @@ mod tests {
 
         // Test the function with the temporary directory as the current working directory
         let expected_path = temp_dir_path.clone();
-        let actual_path = find_project_path(&temp_dir_path).unwrap();
+        let actual_path =
+            find_project_path(&temp_dir_path, &vec![NUR_FILE, NUR_FILE_DOT_NU]).unwrap();
         assert_eq!(expected_path, actual_path);
 
         // Clean up
@@ -101,7 +96,7 @@ mod tests {
 
         // Test the function with the subdirectory as the current working directory
         let expected_path = temp_dir_path.clone();
-        let actual_path = find_project_path(&sub_dir).unwrap();
+        let actual_path = find_project_path(&sub_dir, &vec![NUR_FILE, NUR_FILE_DOT_NU]).unwrap();
         assert_eq!(expected_path, actual_path);
 
         // Clean up
@@ -123,7 +118,7 @@ mod tests {
 
         // Test the function with the subdirectory as the current working directory
         let expected_path = temp_dir_path.clone();
-        let actual_path = find_project_path(&sub_dir).unwrap();
+        let actual_path = find_project_path(&sub_dir, &vec![NUR_FILE, NUR_FILE_DOT_NU]).unwrap();
         assert_eq!(expected_path, actual_path);
 
         // Clean up
@@ -138,7 +133,7 @@ mod tests {
         let temp_dir_path = temp_dir.path().to_path_buf();
 
         // Test the function with the temporary directory as the current working directory
-        match find_project_path(&temp_dir_path) {
+        match find_project_path(&temp_dir_path, &vec![NUR_FILE, NUR_FILE_DOT_NU]) {
             Some(_) => panic!("Expected an error, but got Ok"),
             None => (),
         }
