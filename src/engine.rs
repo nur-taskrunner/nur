@@ -1,4 +1,4 @@
-use crate::args::{NurArgs, is_safe_taskname, parse_commandline_args};
+use crate::args::is_safe_taskname;
 use crate::errors::NurError::EnteredShellError;
 use crate::errors::{NurError, NurResult};
 use crate::names::{
@@ -81,8 +81,8 @@ pub(crate) struct NurEngine {
 
 impl NurEngine {
     pub(crate) fn new(run_path: PathBuf, args: Vec<String>) -> NurResult<NurEngine> {
-        let engine_state = init_engine_state(&run_path)?;
-        let nur_state = NurState::new(run_path, args)?;
+        let mut engine_state = init_engine_state(&run_path)?;
+        let nur_state = NurState::new(&mut engine_state, run_path, args)?;
 
         let mut nur_engine = NurEngine {
             engine_state,
@@ -185,11 +185,6 @@ impl NurEngine {
                 Value::string(task_name, Span::unknown()),
             );
         }
-    }
-
-    pub(crate) fn parse_args(&mut self) -> NurArgs {
-        parse_commandline_args(&self.state.nur_args.join(" "), &mut self.engine_state)
-            .unwrap_or_else(|_| std::process::exit(1))
     }
 
     pub(crate) fn load_env(&mut self) -> NurResult<()> {

@@ -1,4 +1,6 @@
-use crate::args::gather_commandline_args;
+use nu_protocol::engine::EngineState;
+
+use crate::args::{NurArgs, gather_commandline_args, parse_commandline_args};
 use crate::errors::NurResult;
 use crate::names::{
     NUR_CONFIG_CONFIG_FILENAME, NUR_CONFIG_DIR, NUR_CONFIG_ENV_FILENAME, NUR_CONFIG_LIB_PATH,
@@ -20,14 +22,18 @@ pub(crate) struct NurState {
     pub(crate) nurfile_path: Option<PathBuf>,
     pub(crate) local_nurfile_path: Option<PathBuf>,
 
-    pub(crate) nur_args: Vec<String>,
+    pub(crate) nur_args: NurArgs,
     pub(crate) has_task_call: bool,
     pub(crate) task_call: Vec<String>,
     pub(crate) task_name: Option<String>, // full task name, like "nur some-task"
 }
 
 impl NurState {
-    pub(crate) fn new(run_path: PathBuf, args: Vec<String>) -> NurResult<Self> {
+    pub(crate) fn new(
+        engine_state: &mut EngineState,
+        run_path: PathBuf,
+        args: Vec<String>,
+    ) -> NurResult<Self> {
         // Get initial directory details
         let found_project_path = find_project_path(&run_path);
         let has_project_path = found_project_path.is_some();
@@ -45,6 +51,7 @@ impl NurState {
 
         // Parse args into bits
         let cli_args = gather_commandline_args(args)?;
+        let nur_args = parse_commandline_args(&cli_args.nur_args.join(" "), engine_state)?;
 
         Ok(NurState {
             run_path,
@@ -59,7 +66,7 @@ impl NurState {
             nurfile_path,
             local_nurfile_path,
 
-            nur_args: cli_args.nur_args,
+            nur_args,
             has_task_call: cli_args.has_task_call,
             task_call: cli_args.task_call,
             task_name: None,
@@ -69,7 +76,10 @@ impl NurState {
 
 #[cfg(test)]
 mod tests {
-    use crate::names::{NUR_FILE, NUR_FILE_DOT_NU, NUR_LOCAL_FILE, NUR_LOCAL_FILE_DOT_NU};
+    use crate::{
+        engine::init_engine_state,
+        names::{NUR_FILE, NUR_FILE_DOT_NU, NUR_LOCAL_FILE, NUR_LOCAL_FILE_DOT_NU},
+    };
 
     use super::*;
     use std::fs::File;
@@ -91,7 +101,8 @@ mod tests {
             String::from("some_task"),
             String::from("task_arg"),
         ];
-        let state = NurState::new(temp_dir_path.clone(), args).unwrap();
+        let mut engine_state = init_engine_state(temp_dir_path.clone()).unwrap();
+        let state = NurState::new(&mut engine_state, temp_dir_path.clone(), args).unwrap();
 
         // Check everything works out
         assert_eq!(state.run_path, temp_dir_path);
@@ -109,10 +120,7 @@ mod tests {
             temp_dir_path.join(NUR_LOCAL_FILE)
         );
 
-        assert_eq!(
-            state.nur_args,
-            vec![String::from("nur"), String::from("--quiet"),]
-        );
+        assert_eq!(state.nur_args.quiet_execution, true);
         assert_eq!(state.has_task_call, true);
         assert_eq!(
             state.task_call,
@@ -143,7 +151,8 @@ mod tests {
             String::from("some_task"),
             String::from("task_arg"),
         ];
-        let state = NurState::new(temp_dir_path.clone(), args).unwrap();
+        let mut engine_state = init_engine_state(temp_dir_path.clone()).unwrap();
+        let state = NurState::new(&mut engine_state, temp_dir_path.clone(), args).unwrap();
 
         // Check nurfile paths are ok
         assert_eq!(
@@ -171,7 +180,8 @@ mod tests {
             String::from("some_task"),
             String::from("task_arg"),
         ];
-        let state = NurState::new(temp_dir_path.clone(), args).unwrap();
+        let mut engine_state = init_engine_state(temp_dir_path.clone()).unwrap();
+        let state = NurState::new(&mut engine_state, temp_dir_path.clone(), args).unwrap();
 
         // Check everything works out
         assert_eq!(state.run_path, temp_dir_path);
@@ -186,10 +196,7 @@ mod tests {
         assert!(state.nurfile_path.is_none());
         assert!(state.local_nurfile_path.is_none());
 
-        assert_eq!(
-            state.nur_args,
-            vec![String::from("nur"), String::from("--quiet"),]
-        );
+        assert_eq!(state.nur_args.quiet_execution, true);
         assert_eq!(state.has_task_call, true);
         assert_eq!(
             state.task_call,
@@ -208,7 +215,8 @@ mod tests {
 
         // Setup test
         let args = vec![String::from("nur"), String::from("--help")];
-        let state = NurState::new(temp_dir_path.clone(), args).unwrap();
+        let mut engine_state = init_engine_state(temp_dir_path.clone()).unwrap();
+        let state = NurState::new(&mut engine_state, temp_dir_path.clone(), args).unwrap();
 
         // Check everything works out
         assert_eq!(state.run_path, temp_dir_path);
@@ -223,10 +231,7 @@ mod tests {
         assert!(state.nurfile_path.is_none());
         assert!(state.local_nurfile_path.is_none());
 
-        assert_eq!(
-            state.nur_args,
-            vec![String::from("nur"), String::from("--help"),]
-        );
+        assert_eq!(state.nur_args.show_help, true);
         assert_eq!(state.has_task_call, false);
         assert_eq!(state.task_call, vec![] as Vec<String>);
     }
