@@ -20,19 +20,25 @@ pub(crate) fn is_safe_taskname(name: &str) -> bool {
     // This is basically similar to string_should_be_quoted
     // in nushell/crates/nu-parser/src/deparse.rs:1,
     // BUT may change as the requirements are different.
-    // Also I added "#" and "^", as seen in
+    // Also I added "#", "^" and "%", as seen in
     // nushell/crates/nu-parser/src/parse_keywords.rs:175
     !name.starts_with('$')
-        && !(name.chars().any(|c| {
-            c == ' '
+        && !name.chars().any(|c| {
+            c.is_whitespace()
                 || c == '('
+                || c == '['
+                || c == '{'
+                || c == '}'
                 || c == '\''
                 || c == '`'
                 || c == '"'
                 || c == '\\'
+                || c == ';'
+                || c == '|'
                 || c == '#'
                 || c == '^'
-        }))
+                || c == '%'
+        })
 }
 
 pub(crate) fn gather_commandline_args(
