@@ -48,9 +48,7 @@ pub(crate) struct CliArgs {
     pub(crate) task_call: Vec<String>,
 }
 
-pub(crate) fn gather_commandline_args(
-    args: Vec<String>,
-) -> NurResult<CliArgs> {
+pub(crate) fn gather_commandline_args(args: Vec<String>) -> NurResult<CliArgs> {
     let mut nur_args = Vec::from([String::from(NUR_NAME)]);
     let mut task_call = Vec::from([String::from(NUR_NAME)]);
     let mut has_task_call = false;
@@ -223,7 +221,10 @@ mod tests {
             String::from("task-value"),
         ];
         let cli_args = gather_commandline_args(args).unwrap();
-        assert_eq!(cli_args.nur_args, vec![String::from("nur"), String::from("--quiet")]);
+        assert_eq!(
+            cli_args.nur_args,
+            vec![String::from("nur"), String::from("--quiet")]
+        );
         assert_eq!(cli_args.has_task_call, true);
         assert_eq!(
             cli_args.task_call,
@@ -262,7 +263,10 @@ mod tests {
     fn test_gather_commandline_args_handles_missing_task_name() {
         let args = vec![String::from("nur"), String::from("--help")];
         let cli_args = gather_commandline_args(args).unwrap();
-        assert_eq!(cli_args.nur_args, vec![String::from("nur"), String::from("--help")]);
+        assert_eq!(
+            cli_args.nur_args,
+            vec![String::from("nur"), String::from("--help")]
+        );
         assert_eq!(cli_args.has_task_call, false);
         assert_eq!(cli_args.task_call, vec![] as Vec<String>);
     }
@@ -275,7 +279,10 @@ mod tests {
             String::from("some_task_name"),
         ];
         let cli_args = gather_commandline_args(args).unwrap();
-        assert_eq!(cli_args.nur_args, vec![String::from("nur"), String::from("--quiet")]);
+        assert_eq!(
+            cli_args.nur_args,
+            vec![String::from("nur"), String::from("--quiet")]
+        );
         assert_eq!(cli_args.has_task_call, true);
         assert_eq!(
             cli_args.task_call,

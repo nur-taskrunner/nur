@@ -27,12 +27,12 @@ use std::process::ExitCode;
 fn main() -> Result<ExitCode, miette::ErrReport> {
     // Initialise nur state
     let run_path = current_dir_from_environment();
-    let nur_state = NurState::new(run_path, env::args().collect())?;
 
     // Create raw nu engine state
-    let engine_state = init_engine_state(&nur_state.project_path)?;
+    let engine_state = init_engine_state(&run_path)?;
 
     // Setup nur engine from engine state
+    let nur_state = NurState::new(run_path, env::args().collect())?;
     let mut nur_engine = NurEngine::new(engine_state, nur_state)?;
     let use_color = nur_engine
         .engine_state
