@@ -30,9 +30,13 @@ pub enum NurError {
     #[diagnostic()]
     TaskNotFound(String),
 
-    #[error("Could not find nurfile in path and parents")]
+    #[error("Nurfile passed via CLI is not valid")]
     #[diagnostic()]
-    NurfileNotFound(),
+    InvalidNurfile(),
+
+    #[error("Could not find {0} in path and parents")]
+    #[diagnostic()]
+    NurfileNotFound(String),
 
     #[error("Entered shell did raise an error")]
     #[diagnostic()]
