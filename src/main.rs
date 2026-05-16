@@ -12,11 +12,9 @@ mod state;
 use crate::commands::Nur;
 use crate::compat::show_nurscripts_hint;
 use crate::engine::NurEngine;
-use crate::engine::init_engine_state;
 use crate::errors::NurError;
 use crate::names::NUR_QUIET;
 use crate::path::current_dir_from_environment;
-use crate::state::NurState;
 use miette::Result;
 use nu_ansi_term::Color;
 use nu_protocol::shell_error::generic::GenericError;
@@ -25,15 +23,10 @@ use std::env;
 use std::process::ExitCode;
 
 fn main() -> Result<ExitCode, miette::ErrReport> {
-    // Initialise nur state
+    // Initialise nur engine with current path
     let run_path = current_dir_from_environment();
+    let mut nur_engine = NurEngine::new(run_path, env::args().collect())?;
 
-    // Create raw nu engine state
-    let engine_state = init_engine_state(&run_path)?;
-
-    // Setup nur engine from engine state
-    let nur_state = NurState::new(run_path, env::args().collect())?;
-    let mut nur_engine = NurEngine::new(engine_state, nur_state)?;
     let use_color = nur_engine
         .engine_state
         .get_config()

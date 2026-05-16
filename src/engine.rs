@@ -80,7 +80,10 @@ pub(crate) struct NurEngine {
 }
 
 impl NurEngine {
-    pub(crate) fn new(engine_state: EngineState, nur_state: NurState) -> NurResult<NurEngine> {
+    pub(crate) fn new(run_path: PathBuf, args: Vec<String>) -> NurResult<NurEngine> {
+        let engine_state = init_engine_state(&run_path)?;
+        let nur_state = NurState::new(run_path, args)?;
+
         let mut nur_engine = NurEngine {
             engine_state,
             stack: Stack::new(),
@@ -551,10 +554,7 @@ mod tests {
             String::from("some-task"),
             String::from("sub-task"),
         ];
-        let nur_state = NurState::new(temp_dir_path.clone(), args).unwrap();
-        let engine_state = init_engine_state(temp_dir_path).unwrap();
-
-        NurEngine::new(engine_state, nur_state).unwrap()
+        NurEngine::new(temp_dir_path, args).unwrap()
     }
 
     fn _cleanup_nur_engine(temp_dir: &TempDir) {
