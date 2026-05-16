@@ -20,7 +20,7 @@ pub(crate) struct NurState {
     pub(crate) nurfile_path: Option<PathBuf>,
     pub(crate) local_nurfile_path: Option<PathBuf>,
 
-    pub(crate) args_to_nur: Vec<String>,
+    pub(crate) nur_args: Vec<String>,
     pub(crate) has_task_call: bool,
     pub(crate) task_call: Vec<String>,
     pub(crate) task_name: Option<String>, // full task name, like "nur some-task"
@@ -44,7 +44,7 @@ impl NurState {
         let local_nurfile_path = find_local_nurfile(&project_path);
 
         // Parse args into bits
-        let (args_to_nur, has_task_call, task_call) = gather_commandline_args(args)?;
+        let cli_args = gather_commandline_args(args)?;
 
         Ok(NurState {
             run_path,
@@ -59,9 +59,9 @@ impl NurState {
             nurfile_path,
             local_nurfile_path,
 
-            args_to_nur,
-            has_task_call,
-            task_call,
+            nur_args: cli_args.nur_args,
+            has_task_call: cli_args.has_task_call,
+            task_call: cli_args.task_call,
             task_name: None,
         })
     }
@@ -110,7 +110,7 @@ mod tests {
         );
 
         assert_eq!(
-            state.args_to_nur,
+            state.nur_args,
             vec![String::from("nur"), String::from("--quiet"),]
         );
         assert_eq!(state.has_task_call, true);
@@ -187,7 +187,7 @@ mod tests {
         assert!(state.local_nurfile_path.is_none());
 
         assert_eq!(
-            state.args_to_nur,
+            state.nur_args,
             vec![String::from("nur"), String::from("--quiet"),]
         );
         assert_eq!(state.has_task_call, true);
@@ -224,7 +224,7 @@ mod tests {
         assert!(state.local_nurfile_path.is_none());
 
         assert_eq!(
-            state.args_to_nur,
+            state.nur_args,
             vec![String::from("nur"), String::from("--help"),]
         );
         assert_eq!(state.has_task_call, false);

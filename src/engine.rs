@@ -183,7 +183,7 @@ impl NurEngine {
     }
 
     pub(crate) fn parse_args(&mut self) -> NurArgs {
-        parse_commandline_args(&self.state.args_to_nur.join(" "), &mut self.engine_state)
+        parse_commandline_args(&self.state.nur_args.join(" "), &mut self.engine_state)
             .unwrap_or_else(|_| std::process::exit(1))
     }
 
