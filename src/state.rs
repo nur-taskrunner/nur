@@ -1,7 +1,8 @@
+use nu_protocol::Value;
 use nu_protocol::engine::EngineState;
 
 use crate::args::{NurArgs, gather_commandline_args, parse_commandline_args};
-use crate::errors::NurResult;
+use crate::errors::{NurError, NurResult};
 use crate::names::{
     NUR_CONFIG_CONFIG_FILENAME, NUR_CONFIG_DIR, NUR_CONFIG_ENV_FILENAME, NUR_CONFIG_LIB_PATH,
     NUR_FILE, NUR_FILE_DOT_NU, NUR_LOCAL_FILE, NUR_LOCAL_FILE_DOT_NU,
@@ -40,8 +41,31 @@ impl NurState {
         let nur_args = parse_commandline_args(&cli_args.nur_args.join(" "), engine_state)?;
 
         // Define nurfile names
-        let nurfile_names = vec![NUR_FILE, NUR_FILE_DOT_NU];
-        let nurfile_local_names = vec![NUR_LOCAL_FILE, NUR_LOCAL_FILE_DOT_NU];
+        let nurfile_names: Vec<String>;
+        let nurfile_local_names: Vec<String>;
+        match nur_args.nurfile_name.clone() {
+            None => {
+                nurfile_names = vec![String::from(NUR_FILE), String::from(NUR_FILE_DOT_NU)];
+                nurfile_local_names = vec![
+                    String::from(NUR_LOCAL_FILE),
+                    String::from(NUR_LOCAL_FILE_DOT_NU),
+                ];
+            }
+            Some(Value::String {
+                val: nurfile_name, ..
+            }) => {
+                nurfile_names = vec![nurfile_name.clone()];
+                if nurfile_name.ends_with(".nu") {
+                    let nurfile_basename = nurfile_name.strip_suffix(".nu").unwrap();
+                    nurfile_local_names = vec![format!("{nurfile_basename}.local.nu")];
+                } else {
+                    nurfile_local_names = vec![format!("{nurfile_name}.local")];
+                }
+            }
+            Some(_) => {
+                return Err(Box::new(NurError::InvalidNurfile()));
+            }
+        }
 
         // Get initial directory details
         let found_project_path = find_project_path(&run_path, &nurfile_names);
@@ -239,5 +263,22 @@ mod tests {
         assert_eq!(state.nur_args.show_help, true);
         assert_eq!(state.has_task_call, false);
         assert_eq!(state.task_call, vec![] as Vec<String>);
+    }
+
+    #[test]
+    fn test_nur_state_with_nurfile_option() {
+        let temp_dir = tempdir().unwrap();
+        let temp_dir_path = temp_dir.path().to_path_buf();
+
+        // Setup test
+        let args = vec![String::from("nur"), String::from("--nurfile=other-nurfile")];
+        let mut engine_state = init_engine_state(temp_dir_path.clone()).unwrap();
+        let state = NurState::new(&mut engine_state, temp_dir_path.clone(), args).unwrap();
+
+        // Check nurfile name is set
+        assert_eq!(
+            state.nur_args.nurfile_name.unwrap().as_str().unwrap(),
+            "other-nurfile"
+        );
     }
 }

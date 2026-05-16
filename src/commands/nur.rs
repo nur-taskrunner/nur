@@ -19,6 +19,12 @@ impl Command for Nur {
             .description("nur - a taskrunner based on nu shell.")
             .switch("version", "Output version number and exit", Some('v'))
             .switch("list", "List available tasks and then just exit", Some('l'))
+            .named(
+                "nurfile",
+                SyntaxShape::Filepath,
+                "Define which nurfile to search and load (defaults to 'nurfile')",
+                None,
+            )
             .switch(
                 "quiet",
                 "Do not output anything but what the task produces (you can also set the NUR_QUIET environment variable)",

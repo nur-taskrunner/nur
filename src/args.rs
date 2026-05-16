@@ -128,6 +128,7 @@ pub(crate) fn parse_commandline_args(
     {
         // let config_file = call.get_flag_expr("some-flag");
         let list_tasks = call.has_flag(engine_state, &mut stack, "list")?;
+        let nurfile_name = call.get_flag::<Value>(engine_state, &mut stack, "nurfile")?;
         let quiet_execution =
             call.has_flag(engine_state, &mut stack, "quiet")? || env::var(NUR_QUIET).is_ok();
         let attach_stdin = call.has_flag(engine_state, &mut stack, "stdin")?;
@@ -173,6 +174,7 @@ pub(crate) fn parse_commandline_args(
 
         return Ok(NurArgs {
             list_tasks,
+            nurfile_name,
             quiet_execution,
             attach_stdin,
             show_help,
@@ -194,6 +196,7 @@ pub(crate) fn parse_commandline_args(
 #[derive(Debug, Clone)]
 pub(crate) struct NurArgs {
     pub(crate) list_tasks: bool,
+    pub(crate) nurfile_name: Option<Value>,
     pub(crate) quiet_execution: bool,
     pub(crate) attach_stdin: bool,
     pub(crate) show_help: bool,

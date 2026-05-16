@@ -23,7 +23,7 @@ pub(crate) fn current_dir_from_environment() -> PathBuf {
 
 pub(crate) fn find_project_path<P: AsRef<Path>>(
     cwd: P,
-    nurfile_names: &Vec<&str>,
+    nurfile_names: &Vec<String>,
 ) -> Option<PathBuf> {
     let mut path = cwd.as_ref();
 
@@ -42,7 +42,7 @@ pub(crate) fn find_project_path<P: AsRef<Path>>(
 
 pub(crate) fn find_nurfile<P: AsRef<Path>>(
     project_path_: P,
-    nurfile_names: &Vec<&str>,
+    nurfile_names: &Vec<String>,
 ) -> Option<PathBuf> {
     let project_path = project_path_.as_ref();
 
@@ -74,8 +74,11 @@ mod tests {
 
         // Test the function with the temporary directory as the current working directory
         let expected_path = temp_dir_path.clone();
-        let actual_path =
-            find_project_path(&temp_dir_path, &vec![NUR_FILE, NUR_FILE_DOT_NU]).unwrap();
+        let actual_path = find_project_path(
+            &temp_dir_path,
+            &vec![String::from(NUR_FILE), String::from(NUR_FILE_DOT_NU)],
+        )
+        .unwrap();
         assert_eq!(expected_path, actual_path);
 
         // Clean up
@@ -96,7 +99,11 @@ mod tests {
 
         // Test the function with the subdirectory as the current working directory
         let expected_path = temp_dir_path.clone();
-        let actual_path = find_project_path(&sub_dir, &vec![NUR_FILE, NUR_FILE_DOT_NU]).unwrap();
+        let actual_path = find_project_path(
+            &temp_dir_path,
+            &vec![String::from(NUR_FILE), String::from(NUR_FILE_DOT_NU)],
+        )
+        .unwrap();
         assert_eq!(expected_path, actual_path);
 
         // Clean up
@@ -118,7 +125,11 @@ mod tests {
 
         // Test the function with the subdirectory as the current working directory
         let expected_path = temp_dir_path.clone();
-        let actual_path = find_project_path(&sub_dir, &vec![NUR_FILE, NUR_FILE_DOT_NU]).unwrap();
+        let actual_path = find_project_path(
+            &temp_dir_path,
+            &vec![String::from(NUR_FILE), String::from(NUR_FILE_DOT_NU)],
+        )
+        .unwrap();
         assert_eq!(expected_path, actual_path);
 
         // Clean up
@@ -133,7 +144,10 @@ mod tests {
         let temp_dir_path = temp_dir.path().to_path_buf();
 
         // Test the function with the temporary directory as the current working directory
-        match find_project_path(&temp_dir_path, &vec![NUR_FILE, NUR_FILE_DOT_NU]) {
+        match find_project_path(
+            &temp_dir_path,
+            &vec![String::from(NUR_FILE), String::from(NUR_FILE_DOT_NU)],
+        ) {
             Some(_) => panic!("Expected an error, but got Ok"),
             None => (),
         }

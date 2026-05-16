@@ -13,7 +13,7 @@ use crate::commands::Nur;
 use crate::compat::show_nurscripts_hint;
 use crate::engine::NurEngine;
 use crate::errors::NurError;
-use crate::names::NUR_QUIET;
+use crate::names::{NUR_FILE, NUR_QUIET};
 use crate::path::current_dir_from_environment;
 use miette::Result;
 use nu_ansi_term::Color;
@@ -71,7 +71,25 @@ fn main() -> Result<ExitCode, miette::ErrReport> {
 
             std::process::exit(0);
         } else {
-            return Err(miette::ErrReport::from(NurError::NurfileNotFound()));
+            match nur_engine.state.nur_args.nurfile_name.clone() {
+                None => {
+                    return Err(miette::ErrReport::from(NurError::NurfileNotFound(
+                        String::from(NUR_FILE),
+                    )));
+                }
+                Some(Value::String {
+                    val: nurfile_name, ..
+                }) => {
+                    return Err(miette::ErrReport::from(NurError::NurfileNotFound(
+                        nurfile_name,
+                    )));
+                }
+                Some(_) => {
+                    return Err(miette::ErrReport::from(NurError::NurfileNotFound(
+                        String::from(NUR_FILE),
+                    )));
+                }
+            }
         }
     }
 
