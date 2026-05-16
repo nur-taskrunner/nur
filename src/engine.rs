@@ -24,7 +24,7 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
-pub(crate) fn init_engine_state<P: AsRef<Path>>(project_path: P) -> NurResult<EngineState> {
+pub(crate) fn init_engine_state<P: AsRef<Path>>(run_path: P) -> NurResult<EngineState> {
     let engine_state = nu_cmd_lang::create_default_context();
     let engine_state = nu_command::add_shell_command_context(engine_state);
     let engine_state = nu_cmd_extra::add_extra_command_context(engine_state);
@@ -50,7 +50,7 @@ pub(crate) fn init_engine_state<P: AsRef<Path>>(project_path: P) -> NurResult<En
     );
 
     // First, set up env vars as strings only
-    gather_parent_env_vars(&mut engine_state, project_path.as_ref());
+    gather_parent_env_vars(&mut engine_state, run_path.as_ref());
     engine_state.add_env_var(
         "NU_VERSION".to_string(),
         Value::string(NU_VERSION, Span::unknown()),
@@ -94,6 +94,8 @@ impl NurEngine {
     }
 
     fn _apply_nur_state(&mut self) -> NurResult<()> {
+        self.stack.set_cwd(&self.state.project_path)?;
+
         // Set default scripts path
         self.engine_state.add_env_var(
             NUR_ENV_NU_LIB_DIRS.to_string(),
