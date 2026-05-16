@@ -1,5 +1,5 @@
 use miette::{Diagnostic, Report};
-use nu_protocol::{ParseError, ShellError};
+use nu_protocol::{ParseError, ShellError, Span};
 use thiserror::Error;
 
 pub(crate) type NurResult<T> = Result<T, Box<NurError>>;
@@ -66,5 +66,11 @@ impl From<ShellError> for Box<NurError> {
 impl From<Box<NurError>> for Report {
     fn from(err: Box<NurError>) -> Self {
         Report::new(*err) // move out of the Box
+    }
+}
+
+impl From<Box<ShellError>> for Box<NurError> {
+    fn from(_value: Box<ShellError>) -> Box<NurError> {
+        Box::new(NurError::from(_value.into_chained(Span::unknown())))
     }
 }
