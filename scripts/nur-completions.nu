@@ -1,5 +1,5 @@
 def "nu-complete nur task-names" [] {
-  ^nur --list | lines
+  ^nur --list --quiet | lines
 }
 
 # nur - a taskrunner based on nu shell.
