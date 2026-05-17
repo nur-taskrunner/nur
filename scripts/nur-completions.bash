@@ -26,7 +26,7 @@ _comp_cmd_nur()
     then
         if [[ ${cur} == -* ]]
         then
-            opts=" -h --help -v --version -l --list -q --quiet --stdin -c --commands --enter-shell"
+            opts=" -h --help -v --version -l --list -f --nurfile -q --quiet --stdin -c --commands --enter-shell"
             COMPREPLY=( $( compgen -W "${opts}" -- "${cur}" ) )
             return 0
         else

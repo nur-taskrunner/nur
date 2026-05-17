@@ -7,6 +7,7 @@ export extern nur [
   --help(-h)  # Display the help message for this command
   --version(-v)  # Output version number and exit
   --list(-l)  # List available tasks and then just exit
+  --nurfile(-f)  # Define which nurfile to search and load (defaults to 'nurfile')
   --quiet(-q)  # Do not output anything but what the task produces
   --stdin  # Attach stdin to called nur task
   --commands(-c)  # Run the given commands after nurfiles have been loaded
