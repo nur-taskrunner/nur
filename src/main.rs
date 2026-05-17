@@ -93,6 +93,53 @@ fn main() -> Result<ExitCode, miette::ErrReport> {
         }
     }
 
+    // Load .env file from project directory - if requested
+    match &nur_engine.state.nur_args.dotenv {
+        None => {
+            let env_path = nur_engine.state.project_path.join(".env");
+
+            if env_path.exists() && !env_path.is_dir() {
+                nur_engine.load_dot_env(env_path)?;
+
+                // If we now have NUR_QUIET set, update parsed args state
+                if nur_engine.engine_state.get_env_var(NUR_QUIET).is_some() {
+                    nur_engine.state.nur_args.quiet_execution = true;
+                }
+            }
+        }
+        Some(Value::String { val, .. }) => {
+            let env_path = nur_engine.state.project_path.join(val);
+            if !env_path.exists() {
+                return Err(miette::ErrReport::from(NurError::DotenvFileError(
+                    val.into(),
+                    String::from("dotenv file does not exist"),
+                )));
+            }
+            if env_path.is_dir() {
+                return Err(miette::ErrReport::from(NurError::DotenvFileError(
+                    val.into(),
+                    String::from("dotenv file is actually a directory"),
+                )));
+            }
+
+            nur_engine.load_dot_env(env_path)?;
+
+            // If we now have NUR_QUIET set, update parsed args state
+            if nur_engine.engine_state.get_env_var(NUR_QUIET).is_some() {
+                nur_engine.state.nur_args.quiet_execution = true;
+            }
+        }
+        Some(Value::Nothing { .. }) => {} // nothing to do
+        Some(_) => {
+            return Err(miette::ErrReport::from(ShellError::Generic(
+                GenericError::new_internal(
+                    "--dotenv must either be null (do not load .env) or a filepath",
+                    "",
+                ),
+            )));
+        }
+    }
+
     // Load env and config
     nur_engine.load_env()?;
     nur_engine.load_config()?;
@@ -179,53 +226,6 @@ fn main() -> Result<ExitCode, miette::ErrReport> {
     } else {
         PipelineData::empty()
     };
-
-    // Load .env file from project directory - if requested
-    match &nur_engine.state.nur_args.dotenv {
-        None => {
-            let env_path = nur_engine.state.project_path.join(".env");
-
-            if env_path.exists() && !env_path.is_dir() {
-                nur_engine.load_dot_env(env_path)?;
-
-                // If we now have NUR_QUIET set, update parsed args state
-                if nur_engine.engine_state.get_env_var(NUR_QUIET).is_some() {
-                    nur_engine.state.nur_args.quiet_execution = true;
-                }
-            }
-        }
-        Some(Value::String { val, .. }) => {
-            let env_path = nur_engine.state.project_path.join(val);
-            if !env_path.exists() {
-                return Err(miette::ErrReport::from(NurError::DotenvFileError(
-                    val.into(),
-                    String::from("dotenv file does not exist"),
-                )));
-            }
-            if env_path.is_dir() {
-                return Err(miette::ErrReport::from(NurError::DotenvFileError(
-                    val.into(),
-                    String::from("dotenv file is actually a directory"),
-                )));
-            }
-
-            nur_engine.load_dot_env(env_path)?;
-
-            // If we now have NUR_QUIET set, update parsed args state
-            if nur_engine.engine_state.get_env_var(NUR_QUIET).is_some() {
-                nur_engine.state.nur_args.quiet_execution = true;
-            }
-        }
-        Some(Value::Nothing { .. }) => {} // nothing to do
-        Some(_) => {
-            return Err(miette::ErrReport::from(ShellError::Generic(
-                GenericError::new_internal(
-                    "--dotenv must either be null (do not load .env) or a filepath",
-                    "",
-                ),
-            )));
-        }
-    }
 
     // Execute the task
     let exit_code: i32;
