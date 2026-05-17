@@ -257,6 +257,15 @@ fn main() -> Result<ExitCode, miette::ErrReport> {
         eprintln!("full command call: {}", run_command);
     }
     if nur_engine.state.nur_args.enter_shell {
+        if !nur_engine.state.nur_args.quiet_execution {
+            println!("nur version {}", env!("CARGO_PKG_VERSION"));
+            println!(
+                "Project path: {}",
+                nur_engine.state.project_path.to_str().unwrap()
+            );
+            println!("Entering repl shell...");
+            println!();
+        }
         exit_code = match nur_engine.run_repl() {
             Ok(_) => 0,
             Err(_) => 1,

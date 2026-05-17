@@ -6,5 +6,8 @@ $env.NU_LIB_DIRS = [
     $nur.default-lib-dir
 ]
 
+# Ensure indicator is set.
+$env.PROMPT_INDICATOR = "> "
+
 # To load from a custom file you can use:
 # source ($nur.project-path | path join 'custom.nu')

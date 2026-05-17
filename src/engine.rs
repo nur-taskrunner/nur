@@ -468,6 +468,7 @@ impl NurEngine {
     }
 
     pub(crate) fn run_repl(&mut self) -> NurResult<()> {
+        self.engine_state.is_interactive = true;
         match evaluate_repl(
             &mut self.engine_state,
             self.stack.clone(),
