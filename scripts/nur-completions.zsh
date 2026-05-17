@@ -3,7 +3,7 @@
 _nur_tasks() {
     [[ $PREFIX = -* ]] && return 1
     local tasks; tasks=(
-        "${(@f)$(_call_program commands nur --list)}"
+        "${(@f)$(_call_program commands nur --list --quiet)}"
     )
 
     _describe 'nur tasks' tasks

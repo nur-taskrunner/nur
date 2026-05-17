@@ -31,7 +31,7 @@ _comp_cmd_nur()
             return 0
         else
             local tasks
-            IFS=$'\n' tasks=$( nur --list )
+            IFS=$'\n' tasks=$( nur --list --quiet )
             local tasks_string=$( printf "%s\t" "${tasks[@]}" )
             COMPREPLY=( $( compgen -W "${tasks_string}" -- "${cur}" ) )
         fi

@@ -103,16 +103,34 @@ fn main() -> Result<ExitCode, miette::ErrReport> {
     // Handle list tasks
     if nur_engine.state.nur_args.list_tasks {
         // TODO: Parse and handle commands without eval
-        nur_engine.eval_and_print(
-            r#"scope commands
-            | where name starts-with "nur " and type == "custom"
-            | get name
-            | each { |it| $it | str substring 4.. }
-            | sort
-            | each { |it| print $it };
-            null"#,
-            PipelineData::empty(),
-        )?;
+        if nur_engine.state.nur_args.quiet_execution {
+            nur_engine.eval_and_print(
+                r#"scope commands
+                | where name starts-with "nur " and type == "custom"
+                | get name
+                | each { |it| $it | str substring 4.. }
+                | sort
+                | each { |it| print $it };
+                null"#,
+                PipelineData::empty(),
+            )?;
+        } else {
+            println!("nur version {}", env!("CARGO_PKG_VERSION"));
+            println!(
+                "Project path: {}",
+                nur_engine.state.project_path.to_str().unwrap()
+            );
+            println!();
+            nur_engine.eval_and_print(
+                r#"scope commands
+                | where name starts-with "nur " and type == "custom"
+                | select name description
+                | update name { |row| $row.name | str substring 4.. }
+                | sort-by name
+                | table --index false"#,
+                PipelineData::empty(),
+            )?;
+        }
 
         std::process::exit(0);
     }
