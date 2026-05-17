@@ -23,7 +23,7 @@ impl Command for Nur {
                 "nurfile",
                 SyntaxShape::Filepath,
                 "Define which nurfile to search and load (defaults to 'nurfile')",
-                None,
+                Some('f'),
             )
             .switch(
                 "quiet",

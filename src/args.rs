@@ -72,6 +72,7 @@ pub(crate) fn gather_commandline_args(args: Vec<String>) -> NurResult<CliArgs> {
 
         let flag_value = match arg.as_ref() {
             // "--some-file" => args.next().map(|a| escape_quote_string(&a)),
+            "--nurfile" | "-f" => args_iter.next().map(|a| escape_quote_string(a)),
             "--commands" | "-c" => args_iter.next().map(|a| escape_quote_string(a)),
             _ => None,
         };
