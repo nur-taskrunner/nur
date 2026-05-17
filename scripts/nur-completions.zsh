@@ -18,7 +18,9 @@ _nur() {
         '--help[Display the help message for this command]' \
         '-v[Output version number and exit]' \
         '--version[Output version number and exit]' \
-        '-l[List available tasks and then just exit]' \
+        '-f[Specify which ]' \
+        '-l[Define which nurfile to search and load (defaults to "nurfile")]' \
+        '--nurfile[Define which nurfile to search and load (defaults to "nurfile")]' \
         '--list[List available tasks and then just exit]' \
         '-q[Do not output anything but what the task produces]' \
         '--quiet[Do not output anything but what the task produces]' \
