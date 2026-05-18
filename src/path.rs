@@ -1,3 +1,5 @@
+use std::fs;
+use std::io::Result;
 use std::path::{Path, PathBuf};
 
 /// Get the directory where the Nushell executable is located.
@@ -54,6 +56,22 @@ pub(crate) fn find_nurfile<P: AsRef<Path>>(
     }
 
     None
+}
+
+// Copy of nushell: src/config_files.rs -> read_and_sort_directory
+pub(crate) fn read_and_sort_directory(path: &Path) -> Result<Vec<String>> {
+    let mut entries = Vec::new();
+
+    for entry in fs::read_dir(path)? {
+        let entry = entry?;
+        let file_name = entry.file_name();
+        let file_name_str = file_name.into_string().unwrap_or_default();
+        entries.push(file_name_str);
+    }
+
+    entries.sort();
+
+    Ok(entries)
 }
 
 #[cfg(test)]

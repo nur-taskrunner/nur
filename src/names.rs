@@ -5,6 +5,7 @@ pub(crate) const NUR_CONFIG_DIR: &str = ".nur";
 pub(crate) const NUR_CONFIG_LIB_PATH: &str = "scripts";
 pub(crate) const NUR_CONFIG_CONFIG_FILENAME: &str = "config.nu";
 pub(crate) const NUR_CONFIG_ENV_FILENAME: &str = "env.nu";
+pub(crate) const NUR_CONFIG_AUTOLOAD_DIR: &str = "autoload";
 
 // $env variable names
 pub(crate) const NUR_ENV_NU_LIB_DIRS: &str = "NU_LIB_DIRS";
@@ -19,6 +20,7 @@ pub(crate) const NUR_VAR_PROJECT_PATH: &str = "project-path";
 pub(crate) const NUR_VAR_TASK_NAME: &str = "task-name";
 pub(crate) const NUR_VAR_CONFIG_DIR: &str = "config-dir";
 pub(crate) const NUR_VAR_DEFAULT_LIB_DIR: &str = "default-lib-dir";
+pub(crate) const NUR_VAR_AUTOLOAD_DIRS: &str = "autoload-dirs";
 
 // nurfile names
 pub(crate) const NUR_FILE: &str = "nurfile";

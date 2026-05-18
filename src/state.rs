@@ -4,8 +4,8 @@ use nu_protocol::engine::EngineState;
 use crate::args::{NurArgs, gather_commandline_args, parse_commandline_args};
 use crate::errors::{NurError, NurResult};
 use crate::names::{
-    NUR_CONFIG_CONFIG_FILENAME, NUR_CONFIG_DIR, NUR_CONFIG_ENV_FILENAME, NUR_CONFIG_LIB_PATH,
-    NUR_FILE, NUR_FILE_DOT_NU, NUR_LOCAL_FILE, NUR_LOCAL_FILE_DOT_NU,
+    NUR_CONFIG_AUTOLOAD_DIR, NUR_CONFIG_CONFIG_FILENAME, NUR_CONFIG_DIR, NUR_CONFIG_ENV_FILENAME,
+    NUR_CONFIG_LIB_PATH, NUR_FILE, NUR_FILE_DOT_NU, NUR_LOCAL_FILE, NUR_LOCAL_FILE_DOT_NU,
 };
 use crate::path::{find_nurfile, find_project_path};
 use std::path::PathBuf;
@@ -20,6 +20,7 @@ pub(crate) struct NurState {
     pub(crate) lib_dir_path: PathBuf,
     pub(crate) env_path: PathBuf,
     pub(crate) config_path: PathBuf,
+    pub(crate) autoload_dirs: Vec<PathBuf>,
 
     pub(crate) nurfile_path: Option<PathBuf>,
     pub(crate) local_nurfile_path: Option<PathBuf>,
@@ -77,6 +78,7 @@ impl NurState {
         let lib_dir_path = config_dir.join(NUR_CONFIG_LIB_PATH);
         let env_path = config_dir.join(NUR_CONFIG_ENV_FILENAME);
         let config_path = config_dir.join(NUR_CONFIG_CONFIG_FILENAME);
+        let autoload_dirs = vec![config_dir.join(NUR_CONFIG_AUTOLOAD_DIR)];
 
         // Set nurfiles
         let nurfile_path = find_nurfile(&project_path, &nurfile_names);
@@ -91,6 +93,7 @@ impl NurState {
             lib_dir_path,
             env_path,
             config_path,
+            autoload_dirs,
 
             nurfile_path,
             local_nurfile_path,

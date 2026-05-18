@@ -136,6 +136,10 @@ def "nur test-other-nurfile" [] {
     std assert ((run-nur --nurfile=other-nurfile do-other-nurfile) == "ok")
 }
 
+def "nur test-autoload" [] {
+    std assert ((run-nur do-autoload) == "ok")
+}
+
 # Utils and other commands
 
 def is-windows [] {
