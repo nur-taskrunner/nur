@@ -341,15 +341,20 @@ impl NurEngine {
 
     fn _parse_nu_script(
         &mut self,
-        file_path: Option<&str>,
+        file_path: Option<PathBuf>,
         contents: String,
     ) -> NurResult<Arc<Block>> {
-        if let Some(file_path_value) = file_path {
-            self.engine_state.file = Some(PathBuf::from(file_path_value));
-        }
-
         let mut working_set = StateWorkingSet::new(&self.engine_state);
-        let block = nu_parser::parse(&mut working_set, file_path, &contents.into_bytes(), false);
+        let fname = match file_path {
+            Some(path) => path.to_str().map(|s| s.to_string()),
+            None => None,
+        };
+        let block = nu_parser::parse(
+            &mut working_set,
+            fname.as_deref(),
+            &contents.into_bytes(),
+            false,
+        );
 
         if working_set.parse_errors.is_empty() {
             let delta = working_set.render();
@@ -384,7 +389,7 @@ impl NurEngine {
 
     fn _eval<S: ToString>(
         &mut self,
-        file_path: Option<&str>,
+        file_path: Option<PathBuf>,
         contents: S,
         input: PipelineData,
         print: bool,
@@ -396,9 +401,13 @@ impl NurEngine {
             return Ok(0);
         }
 
-        let block = self._parse_nu_script(file_path, str_contents)?;
+        let prev_file = self.engine_state.file.take();
+        self.engine_state.file = file_path.clone();
 
+        let block = self._parse_nu_script(file_path, str_contents)?;
         let result = self._execute_block(&block, input)?;
+
+        self.engine_state.file = prev_file;
 
         // Merge env is requested
         if merge_env {
@@ -461,24 +470,20 @@ impl NurEngine {
         self._eval(None, contents, input, false, true)
     }
 
-    pub(crate) fn source<P: AsRef<Path>>(
-        &mut self,
-        file_path: P,
-        input: PipelineData,
-    ) -> NurResult<i32> {
+    pub(crate) fn source(&mut self, file_path: PathBuf, input: PipelineData) -> NurResult<i32> {
         let contents = fs::read_to_string(&file_path)?;
 
-        self._eval(file_path.as_ref().to_str(), contents, input, false, false)
+        self._eval(Some(file_path), contents, input, false, false)
     }
 
-    pub(crate) fn source_and_merge_env<P: AsRef<Path>>(
+    pub(crate) fn source_and_merge_env(
         &mut self,
-        file_path: P,
+        file_path: PathBuf,
         input: PipelineData,
     ) -> NurResult<i32> {
         let contents = fs::read_to_string(&file_path)?;
 
-        self._eval(file_path.as_ref().to_str(), contents, input, false, true)
+        self._eval(Some(file_path), contents, input, false, true)
     }
 
     pub(crate) fn has_def<S: AsRef<str>>(&self, name: S) -> bool {
