@@ -140,6 +140,9 @@ fn main() -> Result<ExitCode, miette::ErrReport> {
     nur_engine.load_env()?;
     nur_engine.load_config()?;
 
+    // Load autoload files
+    nur_engine.read_autoload_files()?;
+
     // Load task files
     nur_engine.load_nurfiles()?;
 

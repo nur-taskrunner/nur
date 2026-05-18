@@ -3,10 +3,11 @@ use crate::errors::NurError::EnteredShellError;
 use crate::errors::{NurError, NurResult};
 use crate::names::{
     NUR_ENV_NU_LIB_DIRS, NUR_ENV_NUR_TASK_CALL, NUR_ENV_NUR_TASK_NAME, NUR_ENV_NUR_VERSION,
-    NUR_NAME, NUR_VAR_CONFIG_DIR, NUR_VAR_DEFAULT_LIB_DIR, NUR_VAR_PROJECT_PATH, NUR_VAR_RUN_PATH,
-    NUR_VAR_TASK_NAME,
+    NUR_NAME, NUR_VAR_AUTOLOAD_DIRS, NUR_VAR_CONFIG_DIR, NUR_VAR_DEFAULT_LIB_DIR,
+    NUR_VAR_PROJECT_PATH, NUR_VAR_RUN_PATH, NUR_VAR_TASK_NAME,
 };
 use crate::nu_version::NU_VERSION;
+use crate::path::read_and_sort_directory;
 use crate::scripts::{get_default_nur_config, get_default_nur_env};
 use crate::state::NurState;
 use dotenvy::{Error as DotenvError, from_filename_iter as dotenv_from_filename_iter};
@@ -174,6 +175,17 @@ impl NurEngine {
                 Span::unknown(),
             ),
         );
+        nur_record.push(
+            NUR_VAR_AUTOLOAD_DIRS,
+            Value::list(
+                self.state
+                    .autoload_dirs
+                    .iter()
+                    .map(|path| Value::string(path.to_string_lossy(), Span::unknown()))
+                    .collect(),
+                Span::unknown(),
+            ),
+        );
         let mut working_set = StateWorkingSet::new(&self.engine_state);
         let nur_var_id = working_set.add_variable(
             NUR_NAME.as_bytes().into(),
@@ -184,6 +196,29 @@ impl NurEngine {
         self.stack
             .add_var(nur_var_id, Value::record(nur_record, Span::unknown()));
         self.engine_state.merge_delta(working_set.render())?;
+
+        Ok(())
+    }
+
+    pub(crate) fn read_autoload_files(&mut self) -> NurResult<()> {
+        self.state
+            .autoload_dirs
+            .clone()
+            .iter()
+            .for_each(|autoload_dir| {
+                if autoload_dir.exists() {
+                    let entries = read_and_sort_directory(autoload_dir);
+                    if let Ok(entries) = entries {
+                        for entry in entries {
+                            if !entry.ends_with(".nu") {
+                                continue;
+                            }
+                            let path = autoload_dir.join(entry);
+                            let _ = self.source_and_merge_env(path, PipelineData::Empty);
+                        }
+                    }
+                }
+            });
 
         Ok(())
     }
