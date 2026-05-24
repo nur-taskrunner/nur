@@ -3479,7 +3479,7 @@ dependencies = [
 
 [[package]]
 name = "nur"
-version = "0.26.0+0.112.2"
+version = "0.27.0+0.113.0"
 dependencies = [
  "dotenvy",
  "miette",
