@@ -28,6 +28,7 @@ miette = { version = "7.6", features = ["fancy-no-backtrace", "fancy"] }
 nu-ansi-term = "0.50.3"
 nu-path = "0.113.0"
 dotenvy = "0.15.7"
+ctrlc = "3.5"
 
 [target.'cfg(not(target_os = "windows"))'.dependencies]
 openssl = { version = "0.10", features = ["vendored"], optional = true }

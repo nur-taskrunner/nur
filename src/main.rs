@@ -57,6 +57,9 @@ fn main() -> Result<ExitCode, miette::ErrReport> {
         );
     }
 
+    // Enable ctrl+c protection (ensures clean exit when running background jobs)
+    nur_engine.ctrlc_protection();
+
     // Handle execution without project path, only allow to show help, abort otherwise
     if !nur_engine.state.has_project_path {
         if nur_engine.state.nur_args.show_help {
