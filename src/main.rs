@@ -1,6 +1,5 @@
 mod args;
 mod commands;
-mod compat;
 mod engine;
 mod errors;
 mod names;
@@ -10,7 +9,6 @@ mod scripts;
 mod state;
 
 use crate::commands::Nur;
-use crate::compat::show_nurscripts_hint;
 use crate::engine::NurEngine;
 use crate::errors::NurError;
 use crate::names::{NUR_FILE, NUR_QUIET};
@@ -57,11 +55,6 @@ fn main() -> Result<ExitCode, miette::ErrReport> {
             "nurfile local path: {:?}",
             nur_engine.state.local_nurfile_path
         );
-    }
-
-    // Show hints for compatibility issues
-    if nur_engine.state.has_project_path {
-        show_nurscripts_hint(nur_engine.state.project_path.clone(), use_color);
     }
 
     // Handle execution without project path, only allow to show help, abort otherwise
