@@ -123,9 +123,21 @@ impl NurEngine {
 
         // Set up the $nu constant before evaluating any files
         // (those may need to have $nu available to execute them)
-        self.engine_state.generate_nu_constant();
+        self._generate_nu_constant()?;
 
         // Set up the $nur constant record (like $nu)
+        self._generate_nur_constant()?;
+
+        Ok(())
+    }
+
+    fn _generate_nu_constant(&mut self) -> NurResult<()> {
+        self.engine_state.generate_nu_constant();
+
+        Ok(())
+    }
+
+    fn _generate_nur_constant(&mut self) -> NurResult<()> {
         let mut nur_record = Record::new();
         nur_record.push(
             NUR_VAR_RUN_PATH,
