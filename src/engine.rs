@@ -15,14 +15,18 @@ use nu_engine::get_full_help;
 use nu_protocol::ast::Block;
 use nu_protocol::engine::{Command, Stack, StateWorkingSet};
 use nu_protocol::{
-    Config, IntoValue, PipelineData, PipelineExecutionData, Record, ShellError, Span, Type, Value,
-    engine::EngineState, record, report_parse_error, report_shell_error,
+    Config, Handlers, IntoValue, PipelineData, PipelineExecutionData, Record, ShellError,
+    SignalAction, Signals, Span, Type, Value, engine::EngineState, record, report_parse_error,
+    report_shell_error,
 };
 use nu_std::load_standard_library;
 use nu_utils::stdout_write_all_and_flush;
 use std::fs;
 use std::path::{Path, PathBuf};
-use std::sync::Arc;
+use std::sync::{
+    Arc,
+    atomic::{AtomicBool, Ordering},
+};
 
 pub(crate) fn init_engine_state<P: AsRef<Path>>(run_path: P) -> NurResult<EngineState> {
     let engine_state = nu_cmd_lang::create_default_context();
@@ -185,6 +189,37 @@ impl NurEngine {
                 Value::string(task_name, Span::unknown()),
             );
         }
+    }
+
+    // Copy of nushell: src/signals.rs
+    pub(crate) fn ctrlc_protection(&mut self) {
+        let interrupt = Arc::new(AtomicBool::new(false));
+        self.engine_state
+            .set_signals(Signals::new(interrupt.clone()));
+
+        let signal_handlers = Handlers::new();
+
+        // Register a handler to kill all background jobs on interrupt.
+        signal_handlers
+            .register_unguarded({
+                let jobs = self.engine_state.jobs.clone();
+                Box::new(move |action| {
+                    if action == SignalAction::Interrupt
+                        && let Ok(mut jobs) = jobs.lock()
+                    {
+                        let _ = jobs.kill_all();
+                    }
+                })
+            })
+            .expect("Failed to register interrupt signal handler");
+
+        self.engine_state.signal_handlers = Some(signal_handlers.clone());
+
+        ctrlc::set_handler(move || {
+            interrupt.store(true, Ordering::Relaxed);
+            signal_handlers.run(SignalAction::Interrupt);
+        })
+        .expect("Error setting Ctrl-C handler");
     }
 
     pub(crate) fn load_env(&mut self) -> NurResult<()> {

@@ -155,6 +155,7 @@ def "nur upgrade-nu" [
     print $" -> (ansi cyan)nu-ansi-term(ansi reset): needs to be the same version as used in (ansi cyan)nu(ansi reset)"
     print $" -> (ansi cyan)miette(ansi reset): needs to be the same version as used in (ansi cyan)nu(ansi reset)"
     print $" -> (ansi cyan)openssl(ansi reset): needs to be the same version as used in (ansi cyan)nu(ansi reset)"
+    print $" -> (ansi cyan)ctrlc(ansi reset): needs to be the same version as used in (ansi cyan)nu(ansi reset)"
     print $" -> See nushell/Cargo.toml in section (ansi cyan)[workspace.dependencies](ansi reset) for details on used versions"
     print $" -> Also ensure (ansi cyan)rust-version(ansi reset) is set to the same version as used in (ansi cyan)nu(ansi reset)"
 }
