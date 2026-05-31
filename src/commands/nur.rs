@@ -49,12 +49,12 @@ impl Command for Nur {
                 None,
             )
             .optional(
-                "task name",
+                "task-name",
                 SyntaxShape::String,
                 "Name of the task to run (you may use sub tasks)",
             )
             .rest(
-                "task args",
+                "task-args",
                 SyntaxShape::String,
                 "Parameters for the executed task",
             )

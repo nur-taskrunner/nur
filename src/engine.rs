@@ -13,6 +13,7 @@ use crate::state::NurState;
 use dotenvy::{Error as DotenvError, from_filename_iter as dotenv_from_filename_iter};
 use nu_cli::{evaluate_repl, gather_parent_env_vars};
 use nu_engine::get_full_help;
+use nu_plugin::EvaluatedCall;
 use nu_protocol::ast::Block;
 use nu_protocol::engine::{Command, Stack, StateWorkingSet};
 use nu_protocol::{
@@ -88,6 +89,22 @@ impl NurEngine {
     pub(crate) fn new(run_path: PathBuf, args: Vec<String>) -> NurResult<NurEngine> {
         let mut engine_state = init_engine_state(&run_path)?;
         let nur_state = NurState::new(&mut engine_state, run_path, args)?;
+
+        let mut nur_engine = NurEngine {
+            engine_state,
+            stack: Stack::new(),
+
+            state: nur_state,
+        };
+
+        nur_engine._apply_nur_state()?;
+
+        Ok(nur_engine)
+    }
+
+    pub(crate) fn new_for_plugin(run_path: PathBuf, args: &EvaluatedCall) -> NurResult<NurEngine> {
+        let mut engine_state = init_engine_state(&run_path)?;
+        let nur_state = NurState::new_for_plugin(&mut engine_state, run_path, args)?;
 
         let mut nur_engine = NurEngine {
             engine_state,
@@ -495,6 +512,28 @@ impl NurEngine {
         }
     }
 
+    pub(crate) fn eval_for_plugin<S: ToString>(
+        &mut self,
+        contents: S,
+        input: PipelineData,
+    ) -> NurResult<PipelineData> {
+        let str_contents = contents.to_string();
+
+        if str_contents.is_empty() {
+            return Ok(PipelineData::Empty);
+        }
+
+        let prev_file = self.engine_state.file.take();
+        self.engine_state.file = None;
+
+        let block = self._parse_nu_script(None, str_contents)?;
+        let result = self._execute_block(&block, input)?;
+
+        self.engine_state.file = prev_file;
+
+        Ok(result.body)
+    }
+
     // This is used in tests only currently
     #[allow(dead_code)]
     pub fn eval<S: ToString>(&mut self, contents: S, input: PipelineData) -> NurResult<i32> {
@@ -547,9 +586,13 @@ impl NurEngine {
         }
     }
 
-    pub(crate) fn print_help(&mut self, command: &dyn Command) {
+    pub(crate) fn get_help(&mut self, command: &dyn Command) -> String {
         let call = nu_protocol::engine::Call::new(Span::unknown());
-        let full_help = get_full_help(command, &self.engine_state, &mut self.stack, call.head);
+        return get_full_help(command, &self.engine_state, &mut self.stack, call.head);
+    }
+
+    pub(crate) fn print_help(&mut self, command: &dyn Command) {
+        let full_help = self.get_help(command);
 
         let _ = std::panic::catch_unwind(move || stdout_write_all_and_flush(full_help));
     }
