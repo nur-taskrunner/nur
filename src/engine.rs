@@ -374,7 +374,7 @@ impl NurEngine {
     }
 
     pub(crate) fn get_task_def(&mut self) -> Option<&dyn Command> {
-        let task_name = self.state.task_name.clone().unwrap();
+        let task_name = self.state.task_name.clone()?;
 
         self.get_def(task_name)
     }
