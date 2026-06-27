@@ -6,12 +6,12 @@ default_stages = ["pre-commit"]
 default_install_hook_types = [
   "pre-commit",
   "commit-msg"
-  ]
+]
 
 [[repos]]
 repo = "builtin"
 hooks = [
-  { id = "trailing-whitespace" },
+  { id = "trailing-whitespace", exclude = { glob = "**/*.md" } },
   { id = "check-added-large-files" },
   { id = "check-case-conflict" },
   { id = "check-illegal-windows-names" },
@@ -19,6 +19,7 @@ hooks = [
   { id = "check-toml" },
   { id = "check-yaml" },
   { id = "check-symlinks" },
+  { id = "destroyed-symlinks" },
   { id = "check-merge-conflict" },
   { id = "check-shebang-scripts-are-executable" },
   { id = "check-executables-have-shebangs" }
