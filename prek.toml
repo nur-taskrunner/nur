@@ -9,13 +9,19 @@ default_install_hook_types = [
   ]
 
 [[repos]]
-repo = "https://github.com/pre-commit/pre-commit-hooks"
-rev = "v6.0.0"
+repo = "builtin"
 hooks = [
+  { id = "trailing-whitespace" },
   { id = "check-added-large-files" },
+  { id = "check-case-conflict" },
+  { id = "check-illegal-windows-names" },
+  { id = "end-of-file-fixer" },
   { id = "check-toml" },
+  { id = "check-yaml" },
+  { id = "check-symlinks" },
   { id = "check-merge-conflict" },
-  { id = "end-of-file-fixer" }
+  { id = "check-shebang-scripts-are-executable" },
+  { id = "check-executables-have-shebangs" }
 ]
 
 [[repos]]
