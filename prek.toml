@@ -1,0 +1,39 @@
+# Configuration file for `prek`, a git hook framework written in Rust.
+# See https://prek.j178.dev for more information.
+#:schema https://www.schemastore.org/prek.json
+
+default_stages = ["pre-commit"]
+default_install_hook_types = [
+  "pre-commit",
+  "commit-msg"
+  ]
+
+[[repos]]
+repo = "https://github.com/pre-commit/pre-commit-hooks"
+rev = "v6.0.0"
+hooks = [
+  { id = "check-added-large-files" },
+  { id = "check-toml" },
+  { id = "check-merge-conflict" },
+  { id = "end-of-file-fixer" }
+]
+
+[[repos]]
+repo = "https://github.com/doublify/pre-commit-rust"
+rev = "v1.0"
+hooks = [
+  { id = "fmt" },
+  { id = "cargo-check" },
+  { id = "clippy" }
+]
+
+[[repos]]
+repo = "https://github.com/alessandrojcm/commitlint-pre-commit-hook"
+rev = "v9.26.0"
+hooks = [
+  {
+    id = "commitlint",
+    stages = ["commit-msg"],
+    additional_dependencies = ["@team23/commitlint-config@1.0.0"]
+  }
+]
