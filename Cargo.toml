@@ -23,6 +23,7 @@ nu-parser = "0.113.1"
 nu-protocol = "0.113.1"
 nu-std = "0.113.1"
 nu-utils = "0.113.1"
+nu-plugin = { version = "0.113.1", optional = true }
 thiserror = "2.0.18"
 miette = { version = "7.6", features = ["fancy-no-backtrace", "fancy"] }
 nu-ansi-term = "0.50.3"
@@ -38,12 +39,22 @@ network = ["nu-command/network"]
 native-tls = ["nu-command/native-tls"]
 rustls-tls = ["nu-command/rustls-tls"]
 static-link-openssl = ["dep:openssl"]
+nu-plugin = ["dep:nu-plugin"]
 debug = []
 
-default = ["rustls-tls", "network"]
+default = ["rustls-tls", "network", "nu-plugin"]
 
 [dev-dependencies]
 tempfile = "3.23.0"
+
+[[bin]]
+name = "nur"
+path = "src/main.rs"
+
+[[bin]]
+name = "nu_plugin_nur"
+path = "src/nu_plugin.rs"
+required-features = ["nu-plugin"]
 
 [profile.release]
 opt-level = "s"     # Optimize for size

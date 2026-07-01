@@ -1,16 +1,17 @@
-use nu_protocol::Value;
+use nu_plugin::EvaluatedCall;
+use nu_protocol::{Span, Spanned, Value};
 use nu_protocol::engine::EngineState;
 
-use crate::args::{NurArgs, gather_commandline_args, parse_commandline_args};
+use crate::args::{CliArgs, NurArgs, gather_commandline_args, parse_commandline_args};
 use crate::errors::{NurError, NurResult};
 use crate::names::{
     NUR_CONFIG_AUTOLOAD_DIR, NUR_CONFIG_CONFIG_FILENAME, NUR_CONFIG_DIR, NUR_CONFIG_ENV_FILENAME,
-    NUR_CONFIG_LIB_PATH, NUR_FILE, NUR_FILE_DOT_NU, NUR_LOCAL_FILE, NUR_LOCAL_FILE_DOT_NU,
+    NUR_CONFIG_LIB_PATH, NUR_FILE, NUR_FILE_DOT_NU, NUR_LOCAL_FILE, NUR_LOCAL_FILE_DOT_NU, NUR_NAME,
 };
 use crate::path::{find_nurfile, find_project_path};
 use std::path::PathBuf;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub(crate) struct NurState {
     pub(crate) run_path: PathBuf,
     pub(crate) has_project_path: bool,
@@ -41,6 +42,132 @@ impl NurState {
         let cli_args = gather_commandline_args(args)?;
         let nur_args = parse_commandline_args(&cli_args.nur_args.join(" "), engine_state)?;
 
+        // Define nurfile names
+        let nurfile_names: Vec<String>;
+        let nurfile_local_names: Vec<String>;
+        match nur_args.nurfile_name.clone() {
+            None => {
+                nurfile_names = vec![String::from(NUR_FILE), String::from(NUR_FILE_DOT_NU)];
+                nurfile_local_names = vec![
+                    String::from(NUR_LOCAL_FILE),
+                    String::from(NUR_LOCAL_FILE_DOT_NU),
+                ];
+            }
+            Some(Value::String {
+                val: nurfile_name, ..
+            }) => {
+                nurfile_names = vec![nurfile_name.clone()];
+                if nurfile_name.ends_with(".nu") {
+                    let nurfile_basename = nurfile_name.strip_suffix(".nu").unwrap();
+                    nurfile_local_names = vec![format!("{nurfile_basename}.local.nu")];
+                } else {
+                    nurfile_local_names = vec![format!("{nurfile_name}.local")];
+                }
+            }
+            Some(_) => {
+                return Err(Box::new(NurError::InvalidNurfile()));
+            }
+        }
+
+        // Get initial directory details
+        let found_project_path = find_project_path(&run_path, &nurfile_names);
+        let has_project_path = found_project_path.is_some();
+        let project_path = found_project_path.unwrap_or(run_path.clone());
+
+        // Set all paths
+        let config_dir = project_path.join(NUR_CONFIG_DIR);
+        let lib_dir_path = config_dir.join(NUR_CONFIG_LIB_PATH);
+        let env_path = config_dir.join(NUR_CONFIG_ENV_FILENAME);
+        let config_path = config_dir.join(NUR_CONFIG_CONFIG_FILENAME);
+        let autoload_dirs = vec![config_dir.join(NUR_CONFIG_AUTOLOAD_DIR)];
+
+        // Set nurfiles
+        let nurfile_path = find_nurfile(&project_path, &nurfile_names);
+        let local_nurfile_path = find_nurfile(&project_path, &nurfile_local_names);
+
+        Ok(NurState {
+            run_path,
+            has_project_path,
+            project_path,
+
+            config_dir,
+            lib_dir_path,
+            env_path,
+            config_path,
+            autoload_dirs,
+
+            nurfile_path,
+            local_nurfile_path,
+
+            nur_args,
+            has_task_call: cli_args.has_task_call,
+            task_call: cli_args.task_call,
+            task_name: None,
+        })
+    }
+
+    pub(crate) fn new_for_plugin(
+        _engine_state: &mut EngineState,
+        run_path: PathBuf,
+        args: &EvaluatedCall,
+    ) -> NurResult<Self> {
+        let list_tasks = args.has_flag("list")?;
+        let nurfile_name = match args.get_flag::<String>("nurfile")? {
+            Some(string) => Some(Value::string(string, Span::unknown())),
+            _ => None,
+        };
+        let quiet_execution = args.has_flag("quiet")?;
+        let attach_stdin = args.has_flag("stdin")?;
+        let show_help = args.has_flag("help")?;
+        let run_commands = None;
+        // TODO:
+        // let run_commands = match args.get_flag::<String>("commands")? {
+        //     Some(string) => Some(Spanned::from(string)),
+        //     _ => None,
+        // };
+        let enter_shell = args.has_flag("enter-shell")?;
+        let dotenv = match args.get_flag::<String>("dotenv")? {
+            Some(string) => Some(Value::string(string, Span::unknown())),
+            _ => None,
+        };
+        #[cfg(feature = "debug")]
+        let debug_output = args.has_flag("debug")?;
+
+        let nur_args = NurArgs {
+            list_tasks,
+            nurfile_name,
+            quiet_execution,
+            attach_stdin,
+            show_help,
+            run_commands,
+            enter_shell,
+            dotenv,
+            #[cfg(feature = "debug")]
+            debug_output,
+        };
+
+
+        let task_call_positional: Vec<String> = args.positional.iter().map(
+            |arg|
+            match arg {
+                Value::String { val, .. } => String::from(val),
+                _ => String::from("invalid"),  // TODO
+            }
+        ).collect();
+        let mut task_call = vec![];
+        let has_task_call = task_call_positional.len() > 0;
+        if has_task_call {
+            task_call.push(String::from(NUR_NAME));
+            task_call.append(&mut task_call_positional.clone());
+        }
+
+        let cli_args = CliArgs {
+            nur_args: vec![],  // TODO: Maybe "unparse" the args here?
+            has_task_call,
+            task_call,
+        };
+
+        // TODO: Move to reusable code
         // Define nurfile names
         let nurfile_names: Vec<String>;
         let nurfile_local_names: Vec<String>;
