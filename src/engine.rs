@@ -429,6 +429,9 @@ impl NurEngine {
             input,
         )
         .map_err(|err| {
+            if let ShellError::Exit { code, .. } = &err {
+                std::process::exit(*code)
+            }
             report_shell_error(None, &self.engine_state, &err);
             std::process::exit(1);
         })
