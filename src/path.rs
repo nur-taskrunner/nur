@@ -34,10 +34,9 @@ pub(crate) fn find_project_path<P: AsRef<Path>>(
             return Some(path.to_path_buf());
         }
 
-        if let Some(parent) = path.parent() {
+        {
+            let parent = path.parent()?;
             path = parent;
-        } else {
-            return None;
         }
     }
 }
