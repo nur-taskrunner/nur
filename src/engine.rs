@@ -12,6 +12,7 @@ use crate::scripts::{get_default_nur_config, get_default_nur_env};
 use crate::state::NurState;
 use dotenvy::{Error as DotenvError, from_filename_iter as dotenv_from_filename_iter};
 use nu_cli::{evaluate_repl, gather_parent_env_vars};
+use nu_config::{CliOverrides, SystemEnv, resolve_paths};
 use nu_engine::get_full_help;
 use nu_protocol::ast::Block;
 use nu_protocol::engine::{Command, Stack, StateWorkingSet};
@@ -117,10 +118,22 @@ impl NurEngine {
         );
 
         // Set config and env paths to .nur versions
-        self.engine_state
-            .set_config_path("env-path", self.state.env_path.clone());
-        self.engine_state
-            .set_config_path("config-path", self.state.config_path.clone());
+        let cli_overrides = CliOverrides::from_path_strings(
+            self.state.project_path.to_str(),
+            self.state.config_path.to_str(),
+            self.state.env_path.to_str(),
+            &self.state.project_path.clone(),
+        );
+
+        let (config_dirs, _warnings) = match resolve_paths(&SystemEnv, &cli_overrides) {
+            Ok(result) => result,
+            Err(_) => {
+                // Minimal fallback so the engine can still start
+                (nu_config::NushellConfigDirs::empty(), vec![])
+            }
+        };
+
+        self.engine_state.config_dirs = config_dirs;
 
         // Set up the $nu constant before evaluating any files
         // (those may need to have $nu available to execute them)
