@@ -68,8 +68,13 @@ impl NurState {
             }
         }
 
+        // Create combined nurfile names (only used for getting the project path)
+        let mut all_nurfile_names: Vec<String> = vec![];
+        all_nurfile_names.append(&mut nurfile_names.clone());
+        all_nurfile_names.append(&mut nurfile_local_names.clone());
+
         // Get initial directory details
-        let found_project_path = find_project_path(&run_path, &nurfile_names);
+        let found_project_path = find_project_path(&run_path, &all_nurfile_names);
         let has_project_path = found_project_path.is_some();
         let project_path = found_project_path.unwrap_or(run_path.clone());
 
