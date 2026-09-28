@@ -36,6 +36,7 @@ pub(crate) fn init_engine_state<P: AsRef<Path>>(run_path: P) -> NurResult<Engine
     let engine_state = nu_cmd_extra::add_extra_command_context(engine_state);
     let engine_state = nu_cli::add_cli_context(engine_state);
     let engine_state = nu_explore::add_explore_context(engine_state);
+    let engine_state = nu_tui::add_tui_context(engine_state);
     let engine_state = crate::commands::create_nu_context(engine_state);
     let engine_state = crate::commands::create_nur_context(engine_state);
 
