@@ -573,13 +573,7 @@ impl NurEngine {
 
     pub(crate) fn run_repl(&mut self) -> NurResult<()> {
         self.engine_state.is_interactive = true;
-        match evaluate_repl(
-            &mut self.engine_state,
-            self.stack.clone(),
-            None,
-            None,
-            nu_utils::time::Instant::now(),
-        ) {
+        match evaluate_repl(&mut self.engine_state, self.stack.clone(), None, None) {
             Ok(_) => Ok(()),
             Err(_) => Err(Box::new(EnteredShellError())),
         }
