@@ -188,8 +188,7 @@ pub(crate) fn parse_commandline_args(
     }
 
     // Just give the help and exit if the above fails
-    let call = nu_protocol::engine::Call::new(Span::unknown());
-    let full_help = get_full_help(&Nur, engine_state, &mut stack, call.head);
+    let full_help = get_full_help(&Nur, engine_state, &mut stack, Span::unknown());
     print!("{full_help}");
     std::process::exit(1);
 }

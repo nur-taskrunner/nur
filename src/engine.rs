@@ -565,8 +565,12 @@ impl NurEngine {
     }
 
     pub(crate) fn print_help(&mut self, command: &dyn Command) {
-        let call = nu_protocol::engine::Call::new(Span::unknown());
-        let full_help = get_full_help(command, &self.engine_state, &mut self.stack, call.head);
+        let full_help = get_full_help(
+            command,
+            &self.engine_state,
+            &mut self.stack,
+            Span::unknown(),
+        );
 
         let _ = std::panic::catch_unwind(move || stdout_write_all_and_flush(full_help));
     }
