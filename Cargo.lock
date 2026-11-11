@@ -3740,7 +3740,7 @@ dependencies = [
 
 [[package]]
 name = "nur"
-version = "0.31.3+0.116.1"
+version = "0.32.0+0.117.0"
 dependencies = [
  "ctrlc",
  "dotenvy",
